@@ -17,12 +17,14 @@ class Tile:
 
 class Game:
     def __init__(self, SCREEN_WIDTH, SCREEN_HEIGHT, COLORS, SCREEN):
+        self.GAME_START_TIME = 0
+        self.GAME_END_TIME_CRITERIA = 10
         self.EXIT_FLAG = False
         self.SCREEN_WIDTH = SCREEN_WIDTH
         self.SCREEN_HEIGHT = SCREEN_HEIGHT
         self.COLORS = COLORS
         self.SCREEN = SCREEN
-        self.GAME_BEGINNING = True
+        self.IS_GAME_BEGINNING = True
         self.BOARD_DIMENSION = 560
         self.BOARD_ORIGIN_X = self.SCREEN_WIDTH/2 - self.BOARD_DIMENSION/2
         self.BOARD_ORIGIN_Y = self.SCREEN_HEIGHT - 30 - self.BOARD_DIMENSION
@@ -75,17 +77,12 @@ class Game:
             'GREEN':ProcessPoolExecutor(max_workers = 1), 
             'BLUE':ProcessPoolExecutor(max_workers = 1)
             }
-        # self.RED_BOOST_TIMER_PROCESSOR = ProcessPoolExecutor(max_workers = 1)
-        # self.GREEN_BOOST_TIMER_PROCESSOR = ProcessPoolExecutor(max_workers = 1)
-        # self.BLUE_BOOST_TIMER_PROCESSOR = ProcessPoolExecutor(max_workers = 1)
-        # self.RED_BOOST_TIME_STAMP = {'start': 0, 'end': 0}
-        # self.GREEN_BOOST_TIME_STAMP = {'start': 0, 'end': 0}
-        # self.BLUE_BOOST_TIME_STAMP = {'start': 0, 'end': 0}
         self.BOOST_TIME_PROPERTIES = {
             'RED':{'start': 0, 'end': time.time(), 'elapsed': 0, 'remaining': 7000}, 
             'GREEN':{'start': 0, 'end': time.time(), 'elapsed': 0, 'remaining': 7000}, 
             'BLUE':{'start': 0, 'end': time.time(), 'elapsed': 0, 'remaining': 7000}
             }
+        
     def display_gameboard(self):
         BOARD_RECT = pygame.Rect(self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y, self.BOARD_DIMENSION + 1, self.BOARD_DIMENSION + 1)
         pygame.draw.rect(self.SCREEN, self.COLORS['gridline_color'], BOARD_RECT, self.GRIDLINE_WIDTH, 12)
@@ -124,10 +121,13 @@ class Game:
         self.ACTIVE_TILE_2_INDEX = []
 
     def assign_tiles(self):
-        if self.GAME_BEGINNING: 
+        if self.IS_GAME_BEGINNING or self.boost_is_active('GREEN'): 
             for i in range(self.BLOCKS_PER_LINE):
                 for j in range(self.BLOCKS_PER_LINE):
-                    self.CELL_CONTENT[i][j] = Tile(self.TILE_RANKS[0],random.choice(self.TILE_COLORS), LOADED = True)
+                    if self.CELL_CONTENT[i][j] is None:
+                        self.CELL_CONTENT[i][j] = Tile(self.TILE_RANKS[0],random.choice(self.TILE_COLORS), LOADED = True)
+                    else:
+                        continue
         else:
             for i in range(self.BLOCKS_PER_LINE):
                 for j in range(self.BLOCKS_PER_LINE):
@@ -143,7 +143,10 @@ class Game:
         DECELERATION_RATE_OF_RENDER = -REMAINING_PIXELS_PER_SIDE * 2 / RENDER_TIME ** 2
 
         for PIXEL_NUMBER in range(REMAINING_PIXELS_PER_SIDE):
-            if not self.EXIT_FLAG:
+            if self.boost_is_active('GREEN'):
+                self.CELL_CONTENT[CELL_ROW][CELL_COLUMN].LOADING = False
+                self.CELL_CONTENT[CELL_ROW][CELL_COLUMN].LOADED = True
+            elif not self.EXIT_FLAG:
                 if PIXEL_NUMBER == 0:
                     WAIT_TIME = 0
                 elif PIXEL_NUMBER == REMAINING_PIXELS_PER_SIDE:
@@ -165,18 +168,18 @@ class Game:
             else:
                 break
         
-        if not self.EXIT_FLAG:
-            pygame.draw.rect(self.SCREEN, self.COLORS['screen_color'], LOADING_TILE)
-            pygame.display.update(LOADING_TILE)
-            REMAINING_PIXELS_PER_SIDE = 6
-            RENDER_TIME = 0.13
-            INITIAL_VELOCITY_RATE_OF_RENDER = REMAINING_PIXELS_PER_SIDE * 2 / RENDER_TIME
-            DECELERATION_RATE_OF_RENDER = -REMAINING_PIXELS_PER_SIDE * 2 / RENDER_TIME ** 2
-        else:
-            pass
+        pygame.draw.rect(self.SCREEN, self.COLORS['screen_color'], LOADING_TILE)
+        pygame.display.update(LOADING_TILE)
+        REMAINING_PIXELS_PER_SIDE = 6
+        RENDER_TIME = 0.13
+        INITIAL_VELOCITY_RATE_OF_RENDER = REMAINING_PIXELS_PER_SIDE * 2 / RENDER_TIME
+        DECELERATION_RATE_OF_RENDER = -REMAINING_PIXELS_PER_SIDE * 2 / RENDER_TIME ** 2
 
         for PIXEL_NUMBER in range(REMAINING_PIXELS_PER_SIDE):
-            if not self.EXIT_FLAG:
+            if self.boost_is_active('GREEN'):
+                self.CELL_CONTENT[CELL_ROW][CELL_COLUMN].LOADING = False
+                self.CELL_CONTENT[CELL_ROW][CELL_COLUMN].LOADED = True
+            elif not self.EXIT_FLAG:
                 if PIXEL_NUMBER == 0:
                     WAIT_TIME = 0
                 elif PIXEL_NUMBER == REMAINING_PIXELS_PER_SIDE:
@@ -200,7 +203,6 @@ class Game:
 
         if not self.EXIT_FLAG:
             self.CELL_CONTENT[CELL_ROW][CELL_COLUMN].LOADING = False
-            self.render_loaded_tile(CELL_ROW, CELL_COLUMN)
             self.CELL_CONTENT[CELL_ROW][CELL_COLUMN].LOADED = True
         else:
             pass
@@ -401,7 +403,6 @@ class Game:
         self.BOOST_TIME_PROPERTIES[COLOR]['end'] = time.time()
         self.BOOST_TIME_PROPERTIES[COLOR]['elapsed'] = (self.BOOST_TIME_PROPERTIES[COLOR]['end'] - self.BOOST_TIME_PROPERTIES[COLOR]['start']) * 1000
 
-
         # test timing of this
         if self.BOOST_TIME_PROPERTIES[COLOR]['elapsed'] > self.BOOST_TIME_PROPERTIES[COLOR]['remaining']:
                 if self.BOOST_TIME_PROPERTIES[COLOR]['elapsed'] - self.BOOST_TIME_PROPERTIES[COLOR]['remaining'] > 300:
@@ -420,7 +421,7 @@ class Game:
                     self.BOOST_TIME_PROPERTIES[COLOR]['start'] = time.time()
                     self.BOOST_TIME_PROPERTIES[COLOR]['remaining'] = 7000
                     self.BOOST_TIMER_PROCESSOR[COLOR].submit(self.boost_countdown_timer, 6700)
-        #update this remaining time to be checked with elapsed time
+        # Update this remaining time to be checked with elapsed time
         elif self.BOOST_TIME_PROPERTIES[COLOR]['elapsed'] < 1000:
             self.BOOST_TIME_PROPERTIES[COLOR]['start'] = time.time()
             self.BOOST_TIME_PROPERTIES[COLOR]['remaining'] = 7000
@@ -429,7 +430,6 @@ class Game:
             self.BOOST_TIME_PROPERTIES[COLOR]['start'] = time.time()
             self.BOOST_TIME_PROPERTIES[COLOR]['remaining'] += 1000
             self.BOOST_TIMER_PROCESSOR[COLOR].submit(self.boost_countdown_timer, 700)
-
 
     def count_combos(self):
         COMBO_TIME = self.COMBO_TIME_END - self.COMBO_TIME_START
@@ -460,11 +460,18 @@ class Game:
         self.SCREEN.blit(COMBO_COUNT_IMG, (COMBO_COUNT_ORIGIN_X, self.BOARD_ORIGIN_Y - COMBO_COUNT_FONT_SIZE - 58))
         pygame.display.update(COMBO_BACKGROUND_REFILL_TILE)
 
+    def boost_is_active(self, COLOR):
+        BOOST_END_TIME_STAMP_REFERENCE = time.time()
+        BOOST_ELAPSED_TIME_STAMP_REFERENCE = (BOOST_END_TIME_STAMP_REFERENCE - self.BOOST_TIME_PROPERTIES[COLOR]['start']) * 1000
+        # Check additional 200 time if necessary
+        if BOOST_ELAPSED_TIME_STAMP_REFERENCE < self.BOOST_TIME_PROPERTIES[COLOR]['remaining'] + 200:
+            return True
+        else:
+            return False
+
     def add_score(self):
         COMBINED_TILE_VALUE = 0
         ADDITIONAL_COMBO_SCORE = 0
-        BOOST_END_TIME_STAMP_REFERENCE = time.time()
-        BOOST_ELAPSED_TIME_STAMP_REFERENCE = (BOOST_END_TIME_STAMP_REFERENCE - self.BOOST_TIME_PROPERTIES['RED']['start']) * 1000
 
         if self.ACTIVE_TILE_2.RANK['value'] == 1:
             COMBINED_TILE_VALUE = 50
@@ -490,9 +497,8 @@ class Game:
         else:
             ADDITIONAL_COMBO_SCORE = 0
         
-
         #debug double scoring upon activation of boost
-        if BOOST_ELAPSED_TIME_STAMP_REFERENCE < self.BOOST_TIME_PROPERTIES['RED']['remaining'] + 200:
+        if self.boost_is_active('RED'):
             self.SCORE += (COMBINED_TILE_VALUE + ADDITIONAL_COMBO_SCORE) * 2
         else:
             self.SCORE += COMBINED_TILE_VALUE + ADDITIONAL_COMBO_SCORE
@@ -508,6 +514,13 @@ class Game:
         self.SCREEN.blit(SCORE_IMG, (self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y - 97))
         self.SCREEN.blit(SCORE_PREFIX_IMG, (self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y - 97))
         pygame.display.update(SCORE_SURFACE)
+
+    def check_game_timer(self):
+        if time.time() - self.GAME_START_TIME > self.GAME_END_TIME_CRITERIA:
+            return True
+        else:
+            return False
+
 
     def display_time(self):
         FONT = pygame.font.Font("BebasNeue-Regular.otf",34)

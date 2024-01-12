@@ -1,39 +1,25 @@
-# n = int(input())
-# product = 1
-# sum = 0
+import time
+import multiprocessing
 
-# def product_of_factorial(n):
-#     global product
-#     if n == 0:
-#         product *= 1
-#     else:
-#         product *= n
-#         return product_of_factorial(n-1)
+time_start = time.perf_counter()
 
-# def sum_of_factorial(n):
-#     global sum
-#     if n == 0:
-#         sum += 0
-#     else:
-#         sum += n
-#         return sum_of_factorial(n-1)
+def my_f(seconds):
+    time.sleep(seconds)
+    print('I slept for 2 seconds.')
 
-# sum_of_factorial(n)
-# product_of_factorial(n)   
-# print(product + sum)
-# n= int(input('factorial this: '))
 
-# def factorial():
-#     if n == 1:
-#         return 1
-#     else:
-#         return n*factorial(n-1)
-t = input()
-dict = {"uppers":[],"lowers":[]}
-for n in t:
-    if n.isupper():
-        dict["uppers"].append(n)
-    else:
-        dict["lowers"].append(n)
-print(''.join(dict["uppers"]))
-print(''.join(dict["lowers"]))
+
+if __name__ == '__main__':
+    processes = []
+    for i in range(10):
+        process = processes.append(multiprocessing.Process(target = my_f, args = [2,]))
+        processes.append(process)
+        process.start()
+
+    for process in processes:
+        process.join()
+
+print('I still ran') 
+time_ran = time.perf_counter()
+print(time_ran-time_start)
+
