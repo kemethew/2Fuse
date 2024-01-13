@@ -20,18 +20,24 @@ if __name__ == '__main__':
 
     game = Game(SCREEN_WIDTH,SCREEN_HEIGHT,COLORS,SCREEN)
     game.display_gameboard()
+    game.GAME_START_TIME = time.time()
     RUNNING = True
     while RUNNING:
+        if game.check_game_timer():
+            game.EXIT_FLAG = True
+            pygame.quit()
+        else:
+            pass
         game.display_score()
         game.display_time()
         game.assign_tiles()
-        game.GAME_BEGINNING = False
+        game.IS_GAME_BEGINNING = False
         game.render_tiles()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 game.EXIT_FLAG = True
                 RUNNING = False
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEBUTTONDOWN:
                 MOUSE_POS_X = pygame.mouse.get_pos()[0]
                 MOUSE_POS_Y = pygame.mouse.get_pos()[1]
                 MOUSE_ROW = int((MOUSE_POS_Y - game.BOARD_ORIGIN_Y) // game.GRID_GAP_DIMENSION)

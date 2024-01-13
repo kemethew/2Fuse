@@ -17,12 +17,14 @@ class Tile:
 
 class Game:
     def __init__(self, SCREEN_WIDTH, SCREEN_HEIGHT, COLORS, SCREEN):
+        self.GAME_START_TIME = 0
+        self.GAME_END_TIME_CRITERIA = 10
         self.EXIT_FLAG = False
         self.SCREEN_WIDTH = SCREEN_WIDTH
         self.SCREEN_HEIGHT = SCREEN_HEIGHT
         self.COLORS = COLORS
         self.SCREEN = SCREEN
-        self.GAME_BEGINNING = True
+        self.IS_GAME_BEGINNING = True
         self.BOARD_DIMENSION = 560
         self.BOARD_ORIGIN_X = self.SCREEN_WIDTH/2 - self.BOARD_DIMENSION/2
         self.BOARD_ORIGIN_Y = self.SCREEN_HEIGHT - 30 - self.BOARD_DIMENSION
@@ -119,7 +121,7 @@ class Game:
         self.ACTIVE_TILE_2_INDEX = []
 
     def assign_tiles(self):
-        if self.GAME_BEGINNING or self.boost_is_active('GREEN'): 
+        if self.IS_GAME_BEGINNING or self.boost_is_active('GREEN'): 
             for i in range(self.BLOCKS_PER_LINE):
                 for j in range(self.BLOCKS_PER_LINE):
                     if self.CELL_CONTENT[i][j] is None:
@@ -512,6 +514,13 @@ class Game:
         self.SCREEN.blit(SCORE_IMG, (self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y - 97))
         self.SCREEN.blit(SCORE_PREFIX_IMG, (self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y - 97))
         pygame.display.update(SCORE_SURFACE)
+
+    def check_game_timer(self):
+        if time.time() - self.GAME_START_TIME > self.GAME_END_TIME_CRITERIA:
+            return True
+        else:
+            return False
+
 
     def display_time(self):
         FONT = pygame.font.Font("BebasNeue-Regular.otf",34)
