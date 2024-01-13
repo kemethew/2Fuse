@@ -14,25 +14,27 @@ if __name__ == '__main__':
             'color_white':(255,255,255),'active_tile_halo':(70,200,200),
             'active_tile_highlight':(240,240,240),'tile_border':(230,230,230),
             'score_color':(255,210,0),'score_prefix_color':(105,105,105),
-            'best_score_color':(255,235,50)}
+            'best_score_color':(255,235,50), 'timer_border_color':(192,192,220), 
+            'normal_running_timer_color':(0,255,0), 'boosted_running_timer_color':(153,255,255)}
     SCREEN = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
     SCREEN.fill(COLORS['screen_color'])
 
     game = Game(SCREEN_WIDTH,SCREEN_HEIGHT,COLORS,SCREEN)
     game.display_gameboard()
-    game.GAME_START_TIME = time.time()
+    game.GAME_START_TIME = game.GAME_CURRENT_TIME_STAMP = time.time()
     RUNNING = True
     while RUNNING:
-        if game.check_game_timer():
+        game.GAME_PREVIOUS_TIME_STAMP = game.GAME_CURRENT_TIME_STAMP
+        game.GAME_CURRENT_TIME_STAMP = time.time()
+        if game.check_expired_game_timer():
             game.EXIT_FLAG = True
-            pygame.quit()
-        else:
-            pass
+            RUNNING = False
         game.display_score()
-        game.display_time()
+        game.display_game_timer()
         game.assign_tiles()
         game.IS_GAME_BEGINNING = False
         game.render_tiles()
+        game.check_expired_boost_timers()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 game.EXIT_FLAG = True

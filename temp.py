@@ -1,25 +1,33 @@
 import time
 import multiprocessing
 
-time_start = time.perf_counter()
+# BOOST_IS_ACTIVE = False
+# BOOST_START_TIME = time.time()
 
-def my_f(seconds):
-    time.sleep(seconds)
-    print('I slept for 2 seconds.')
+# def activate_boost():
+#     global BOOST_START_TIME, BOOST_IS_ACTIVE
+#     BOOST_RUNNING_TIME = time.time() - BOOST_START_TIME
+#     if not BOOST_IS_ACTIVE:
+#         BOOST_IS_ACTIVE = True
+#         BOOST_START_TIME = time.time()
+#     else:
+#         if BOOST_RUNNING_TIME >= 7:
+#             BOOST_IS_ACTIVE = False
+#         elif BOOST_RUNNING_TIME < 1:
+#             BOOST_START_TIME += BOOST_RUNNING_TIME
+#         else:
+#             BOOST_START_TIME += 1
 
+# print(BOOST_START_TIME)
+# activate_boost()
+# time.sleep(3)
+# activate_boost()
+# print(BOOST_START_TIME)
 
+n = 1
 
-if __name__ == '__main__':
-    processes = []
-    for i in range(10):
-        process = processes.append(multiprocessing.Process(target = my_f, args = [2,]))
-        processes.append(process)
-        process.start()
+if n == 0:
+    pass
 
-    for process in processes:
-        process.join()
-
-print('I still ran') 
-time_ran = time.perf_counter()
-print(time_ran-time_start)
-
+if n==1:
+    print('its working')
