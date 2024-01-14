@@ -19,62 +19,69 @@ if __name__ == '__main__':
     SCREEN = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
     SCREEN.fill(COLORS['screen_color'])
 
-    game = Game(SCREEN_WIDTH,SCREEN_HEIGHT,COLORS,SCREEN)
+    game = Game(SCREEN_WIDTH, SCREEN_HEIGHT, COLORS, SCREEN)
     game.display_gameboard()
     game.GAME_START_TIME = game.GAME_CURRENT_TIME_STAMP = time.time()
     RUNNING = True
     while RUNNING:
-        game.GAME_PREVIOUS_TIME_STAMP = game.GAME_CURRENT_TIME_STAMP
-        game.GAME_CURRENT_TIME_STAMP = time.time()
-        if game.check_expired_game_timer():
+        if game.IS_GAME_OVER:
+            game.display_game_over_screen()
+            pygame.display.update()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    RUNNING = False
+        elif game.is_expired_game_timer():
             game.EXIT_FLAG = True
-            RUNNING = False
-        game.display_score()
-        game.display_game_timer()
-        game.assign_tiles()
-        game.IS_GAME_BEGINNING = False
-        game.render_tiles()
-        game.check_expired_boost_timers()
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                game.EXIT_FLAG = True
-                RUNNING = False
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                MOUSE_POS_X = pygame.mouse.get_pos()[0]
-                MOUSE_POS_Y = pygame.mouse.get_pos()[1]
-                MOUSE_ROW = int((MOUSE_POS_Y - game.BOARD_ORIGIN_Y) // game.GRID_GAP_DIMENSION)
-                MOUSE_COLUMN = int((MOUSE_POS_X - game.BOARD_ORIGIN_X) // game.GRID_GAP_DIMENSION)
-                try:
-                    if game.GRIDLINE_BOUNDARIES['xmax'][MOUSE_COLUMN + 1] > MOUSE_POS_X > game.GRIDLINE_BOUNDARIES['xmax'][MOUSE_COLUMN] and game.GRIDLINE_BOUNDARIES['xmin'][MOUSE_COLUMN + 1] > MOUSE_POS_X > game.GRIDLINE_BOUNDARIES['xmin'][MOUSE_COLUMN] and game.GRIDLINE_BOUNDARIES['ymax'][MOUSE_ROW + 1] > MOUSE_POS_Y > game.GRIDLINE_BOUNDARIES['ymax'][MOUSE_ROW] and game.GRIDLINE_BOUNDARIES['ymin'][MOUSE_ROW + 1] > MOUSE_POS_Y > game.GRIDLINE_BOUNDARIES['ymin'][MOUSE_ROW]:
-                        if game.ACTIVE_TILE_1 is None and game.CELL_CONTENT[MOUSE_ROW][MOUSE_COLUMN].LOADED:
-                            game.ACTIVE_TILE_1 = game.CELL_CONTENT[MOUSE_ROW][MOUSE_COLUMN]
-                            game.ACTIVE_TILE_1_INDEX.extend([MOUSE_ROW, MOUSE_COLUMN])
-                            game.highlight_active_tile()
-                        elif game.ACTIVE_TILE_2 is None and game.CELL_CONTENT[MOUSE_ROW][MOUSE_COLUMN].LOADED:
-                            game.ACTIVE_TILE_2 = game.CELL_CONTENT[MOUSE_ROW][MOUSE_COLUMN]
-                            game.ACTIVE_TILE_2_INDEX.extend([MOUSE_ROW, MOUSE_COLUMN])
-                            game.highlight_active_tile(Tile_2=True)
-                            if game.check_equal_tiles() and not game.ACTIVE_TILE_1_INDEX == game.ACTIVE_TILE_2_INDEX:
-                                game.COMBO_TIME_END = time.time()
-                                game.count_combos()
-                                game.COMBO_TIME_START = time.time()
-                                pygame.time.delay(40)
-                                game.combine_tiles()
-                                game.refresh_active_tiles()
-                            elif game.check_equal_tiles() and game.ACTIVE_TILE_1_INDEX == game.ACTIVE_TILE_2_INDEX:
-                                pygame.time.delay(40)
-                                game.refresh_active_tiles()
+            game.display_game_over_screen()
+            pygame.display.update()
+        else:
+            game.display_score()
+            game.display_game_timer()
+            game.display_boost_timers()
+            game.assign_tiles()
+            game.IS_GAME_BEGINNING = False
+            game.render_tiles()
+            game.check_expired_boost_timers()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    game.EXIT_FLAG = True
+                    RUNNING = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    MOUSE_POS_X = pygame.mouse.get_pos()[0]
+                    MOUSE_POS_Y = pygame.mouse.get_pos()[1]
+                    MOUSE_ROW = int((MOUSE_POS_Y - game.BOARD_ORIGIN_Y) // game.GRID_GAP_DIMENSION)
+                    MOUSE_COLUMN = int((MOUSE_POS_X - game.BOARD_ORIGIN_X) // game.GRID_GAP_DIMENSION)
+                    try:
+                        if game.GRIDLINE_BOUNDARIES['xmax'][MOUSE_COLUMN + 1] > MOUSE_POS_X > game.GRIDLINE_BOUNDARIES['xmax'][MOUSE_COLUMN] and game.GRIDLINE_BOUNDARIES['xmin'][MOUSE_COLUMN + 1] > MOUSE_POS_X > game.GRIDLINE_BOUNDARIES['xmin'][MOUSE_COLUMN] and game.GRIDLINE_BOUNDARIES['ymax'][MOUSE_ROW + 1] > MOUSE_POS_Y > game.GRIDLINE_BOUNDARIES['ymax'][MOUSE_ROW] and game.GRIDLINE_BOUNDARIES['ymin'][MOUSE_ROW + 1] > MOUSE_POS_Y > game.GRIDLINE_BOUNDARIES['ymin'][MOUSE_ROW]:
+                            if game.ACTIVE_TILE_1 is None and game.CELL_CONTENT[MOUSE_ROW][MOUSE_COLUMN].LOADED:
+                                game.ACTIVE_TILE_1 = game.CELL_CONTENT[MOUSE_ROW][MOUSE_COLUMN]
+                                game.ACTIVE_TILE_1_INDEX.extend([MOUSE_ROW, MOUSE_COLUMN])
+                                game.highlight_active_tile()
+                            elif game.ACTIVE_TILE_2 is None and game.CELL_CONTENT[MOUSE_ROW][MOUSE_COLUMN].LOADED:
+                                game.ACTIVE_TILE_2 = game.CELL_CONTENT[MOUSE_ROW][MOUSE_COLUMN]
+                                game.ACTIVE_TILE_2_INDEX.extend([MOUSE_ROW, MOUSE_COLUMN])
+                                game.highlight_active_tile(Tile_2=True)
+                                if game.check_equal_tiles() and not game.ACTIVE_TILE_1_INDEX == game.ACTIVE_TILE_2_INDEX:
+                                    game.COMBO_TIME_END = time.time()
+                                    game.count_combos()
+                                    game.COMBO_TIME_START = time.time()
+                                    pygame.time.delay(40)
+                                    game.combine_tiles()
+                                    game.refresh_active_tiles()
+                                elif game.check_equal_tiles() and game.ACTIVE_TILE_1_INDEX == game.ACTIVE_TILE_2_INDEX:
+                                    pygame.time.delay(40)
+                                    game.refresh_active_tiles()
+                                else:
+                                    game.COMBO_TIME_START = 0.0
+                                    pygame.time.delay(40)
+                                    game.refresh_active_tiles()
                             else:
-                                game.COMBO_TIME_START = 0.0
-                                pygame.time.delay(40)
-                                game.refresh_active_tiles()
-                        else:
-                            pass
+                                pass
 
-                except IndexError:
-                    pass
+                    except IndexError:
+                        pass
 
-        pygame.display.update()
+            pygame.display.update()
 
     pygame.quit()
     sys.exit()

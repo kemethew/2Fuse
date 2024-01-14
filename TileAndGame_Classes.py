@@ -28,6 +28,7 @@ class Game:
         self.GAME_PREVIOUS_TIME_STAMP = 0
         self.EXIT_FLAG = False
         self.IS_GAME_BEGINNING = True
+        self.IS_GAME_OVER = False
         self.BOARD_DIMENSION = 560
         self.BOARD_ORIGIN_X = self.SCREEN_WIDTH/2 - self.BOARD_DIMENSION/2
         self.BOARD_ORIGIN_Y = self.SCREEN_HEIGHT - 30 - self.BOARD_DIMENSION
@@ -70,10 +71,10 @@ class Game:
         self.COMBO_TIME_START = 0.0
         self.COMBO_TIME_END = 0.0
         self.COMBO_COUNT = 1
-        self.BOOST_IS_ACTIVE = {'RED':False, 'GREEN':False, 'BLUE':False}
-        self.BOOST_START_TIME = {'RED':0, 'GREEN':0, 'BLUE':0}
-        self.BOOST_TIME_LIMIT = 7
-        self.BOOST_RUNNING_TIME = {'RED':0, 'GREEN':0, 'BLUE':0}
+        self.BOOST_IS_ACTIVE = {'RED': False, 'GREEN': False, 'BLUE': False}
+        self.BOOST_START_TIME = {'RED': 0, 'GREEN': 0, 'BLUE': 0}
+        self.BOOST_TIME_REMAINING = {'RED': 7, 'GREEN': 7, 'BLUE': 7}
+        self.BOOST_RUNNING_TIME = {'RED': 0, 'GREEN': 0, 'BLUE': 0}
         
     def display_gameboard(self):
         BOARD_RECT = pygame.Rect(self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y, self.BOARD_DIMENSION + 1, self.BOARD_DIMENSION + 1)
@@ -386,44 +387,45 @@ class Game:
         self.add_score()
 
     def check_expired_boost_timers(self):
-        self.BOOST_RUNNING_TIME['RED'] = self.GAME_CURRENT_TIME_STAMP - self.BOOST_START_TIME['RED']
-        self.BOOST_RUNNING_TIME['GREEN'] = self.GAME_CURRENT_TIME_STAMP - self.BOOST_START_TIME['GREEN']
-        self.BOOST_RUNNING_TIME['BLUE'] = self.GAME_CURRENT_TIME_STAMP - self.BOOST_START_TIME['BLUE']
-        if self.BOOST_TIME_LIMIT < self.BOOST_RUNNING_TIME['RED']:
+        ELAPSED_TIME_THIS_LOOP = self.GAME_CURRENT_TIME_STAMP - self.GAME_PREVIOUS_TIME_STAMP
+        self.BOOST_TIME_REMAINING['RED'] -= ELAPSED_TIME_THIS_LOOP
+        self.BOOST_TIME_REMAINING['GREEN'] -= ELAPSED_TIME_THIS_LOOP
+        self.BOOST_TIME_REMAINING['BLUE'] -= ELAPSED_TIME_THIS_LOOP
+        if self.BOOST_TIME_REMAINING['RED'] <= 0 and not self.BOOST_IS_ACTIVE['RED']:
             self.BOOST_IS_ACTIVE['RED'] = False
-        if self.BOOST_TIME_LIMIT < self.BOOST_RUNNING_TIME['GREEN']:
+            self.BOOST_TIME_REMAINING['RED'] = 7
+        if self.BOOST_TIME_REMAINING['GREEN'] <= 0 and not self.BOOST_IS_ACTIVE['GREEN']:
             self.BOOST_IS_ACTIVE['GREEN'] = False
-        if self.BOOST_TIME_LIMIT < self.BOOST_RUNNING_TIME['BLUE']:
+            self.BOOST_TIME_REMAINING['GREEN'] = 7
+        if self.BOOST_TIME_REMAINING['BLUE'] <= 0 and not self.BOOST_IS_ACTIVE['BLUE']:
             self.BOOST_IS_ACTIVE['BLUE'] = False
+            self.BOOST_TIME_REMAINING['BLUE'] = 7
 
     def activate_boost(self, COLOR):
         if COLOR == 'RED':
             if not self.BOOST_IS_ACTIVE['RED']:
                 self.BOOST_IS_ACTIVE['RED'] = True
-                self.BOOST_START_TIME['RED'] = time.time()
             else:
-                if self.BOOST_RUNNING_TIME['RED'] < 1:
-                    self.BOOST_START_TIME['RED'] += self.BOOST_RUNNING_TIME['RED']
+                if self.BOOST_TIME_REMAINING['RED'] >= 6:
+                    self.BOOST_TIME_REMAINING['RED'] = 7
                 else:
-                    self.BOOST_START_TIME['RED'] += 1
+                    self.BOOST_TIME_REMAINING['RED'] += 1
         elif COLOR == 'GREEN':
             if not self.BOOST_IS_ACTIVE['GREEN']:
                 self.BOOST_IS_ACTIVE['GREEN'] = True
-                self.BOOST_START_TIME['GREEN'] = time.time()
             else:
-                if self.BOOST_RUNNING_TIME['GREEN'] < 1:
-                    self.BOOST_START_TIME['GREEN'] += self.BOOST_RUNNING_TIME['GREEN']
+                if self.BOOST_TIME_REMAINING['GREEN'] >= 6:
+                    self.BOOST_TIME_REMAINING['GREEN'] = 7
                 else:
-                    self.BOOST_START_TIME['GREEN'] += 1
+                    self.BOOST_TIME_REMAINING['GREEN'] += 1
         else:
             if not self.BOOST_IS_ACTIVE['BLUE']:
                 self.BOOST_IS_ACTIVE['BLUE'] = True
-                self.BOOST_START_TIME['BLUE'] = time.time()
             else:
-                if self.BOOST_RUNNING_TIME['BLUE'] < 1:
-                    self.BOOST_START_TIME['BLUE'] += self.BOOST_RUNNING_TIME['BLUE']
+                if self.BOOST_TIME_REMAINING['BLUE'] >= 6:
+                    self.BOOST_TIME_REMAINING['BLUE'] = 7
                 else:
-                    self.BOOST_START_TIME['BLUE'] += 1
+                    self.BOOST_TIME_REMAINING['BLUE'] += 1
 
     def count_combos(self):
         COMBO_TIME = self.COMBO_TIME_END - self.COMBO_TIME_START
@@ -499,18 +501,25 @@ class Game:
         self.SCREEN.blit(SCORE_PREFIX_IMG, (self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y - 97))
         pygame.display.update(SCORE_SURFACE)
 
-    def check_expired_game_timer(self):
+    def is_expired_game_timer(self):
+        self.GAME_PREVIOUS_TIME_STAMP = self.GAME_CURRENT_TIME_STAMP
+        self.GAME_CURRENT_TIME_STAMP = time.time()
+        ELAPSED_TIME_THIS_LOOP = self.GAME_CURRENT_TIME_STAMP - self.GAME_PREVIOUS_TIME_STAMP
+        if self.BOOST_IS_ACTIVE['BLUE']:
+            self.GAME_TIME_REMAINING -= ELAPSED_TIME_THIS_LOOP / 2
+        else:
+            self.GAME_TIME_REMAINING -= ELAPSED_TIME_THIS_LOOP
         if self.GAME_TIME_REMAINING <= 0:
             return True
         else:
             return False
 
     def display_game_timer(self):
-        ELAPSED_TIME_THIS_LOOP = self.GAME_CURRENT_TIME_STAMP - self.GAME_PREVIOUS_TIME_STAMP
-        if self.BOOST_IS_ACTIVE['BLUE']:
-            self.GAME_TIME_REMAINING -= ELAPSED_TIME_THIS_LOOP / 2
-        else:
-            self.GAME_TIME_REMAINING -= ELAPSED_TIME_THIS_LOOP
+        # ELAPSED_TIME_THIS_LOOP = self.GAME_CURRENT_TIME_STAMP - self.GAME_PREVIOUS_TIME_STAMP
+        # if self.BOOST_IS_ACTIVE['BLUE']:
+        #     self.GAME_TIME_REMAINING -= ELAPSED_TIME_THIS_LOOP / 2
+        # else:
+        #     self.GAME_TIME_REMAINING -= ELAPSED_TIME_THIS_LOOP
 
         SECOND = int(self.GAME_TIME_REMAINING)
         CENTISECOND = int((self.GAME_TIME_REMAINING - SECOND) * 100)
@@ -533,3 +542,28 @@ class Game:
         pygame.display.update(TIMER_FILLER_BAR)
         pygame.display.update(TIMER_BORDER)      
         pygame.display.update(RUNNING_TIMER_BAR)
+
+    def display_boost_timers(self):
+        BORDER_WIDTH, BORDER_HEIGHT, FILLER_WIDTH, FILLER_HEIGHT = 35, 45, 33, 43
+        RED_BOOST_TIMER_BORDER = pygame.Rect(self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 10 - 131, self.BOARD_ORIGIN_Y - 90, BORDER_WIDTH, BORDER_HEIGHT)
+        GREEN_BOOST_TIMER_BORDER = pygame.Rect(self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 10 - 83, self.BOARD_ORIGIN_Y - 90, BORDER_WIDTH, BORDER_HEIGHT)
+        BLUE_BOOST_TIMER_BORDER = pygame.Rect(self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 10 - 35, self.BOARD_ORIGIN_Y - 90, BORDER_WIDTH, BORDER_HEIGHT)
+        RED_BOOST_TIMER_FILLER = pygame.Rect(self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 10 - 131 + 1, self.BOARD_ORIGIN_Y - 90 + 1, FILLER_WIDTH, FILLER_HEIGHT * (self.BOOST_RUNNING_TIME['RED'])/7)
+        GREEN_BOOST_TIMER_FILLER = pygame.Rect(self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 10 - 83 + 1, self.BOARD_ORIGIN_Y - 90 + 1, FILLER_WIDTH, FILLER_HEIGHT)
+        BLUE_BOOST_TIMER_FILLER = pygame.Rect(self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 10 - 35 + 1, self.BOARD_ORIGIN_Y - 90 + 1, FILLER_WIDTH, FILLER_HEIGHT)
+        pygame.draw.rect(self.SCREEN, self.COLORS['red_shape_border'], RED_BOOST_TIMER_BORDER, 1)
+        pygame.draw.rect(self.SCREEN, self.COLORS['green_shape_border'], GREEN_BOOST_TIMER_BORDER, 1)
+        pygame.draw.rect(self.SCREEN, self.COLORS['blue_shape_border'], BLUE_BOOST_TIMER_BORDER, 1)
+        pygame.draw.rect(self.SCREEN, self.COLORS['red_tile'], RED_BOOST_TIMER_FILLER)
+        pygame.draw.rect(self.SCREEN, self.COLORS['green_tile'], GREEN_BOOST_TIMER_FILLER)
+        pygame.draw.rect(self.SCREEN, self.COLORS['blue_tile'], BLUE_BOOST_TIMER_FILLER)
+        pygame.display.update(RED_BOOST_TIMER_BORDER)
+        pygame.display.update(GREEN_BOOST_TIMER_BORDER)
+        pygame.display.update(BLUE_BOOST_TIMER_BORDER)
+        pygame.display.update(RED_BOOST_TIMER_FILLER)
+        pygame.display.update(GREEN_BOOST_TIMER_FILLER)
+        pygame.display.update(BLUE_BOOST_TIMER_FILLER)
+
+    def display_game_over_screen(self):
+        self.IS_GAME_OVER = True
+        self.SCREEN.fill(self.COLORS['screen_color'])
