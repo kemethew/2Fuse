@@ -35,13 +35,13 @@ if __name__ == '__main__':
             game.display_game_over_screen()
             pygame.display.update()
         else:
-            game.display_score()
             game.display_game_timer()
+            game.check_expired_boost_timers()
             game.display_boost_timers()
             game.assign_tiles()
             game.IS_GAME_BEGINNING = False
             game.render_tiles()
-            game.check_expired_boost_timers()
+            game.display_score()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     game.EXIT_FLAG = True
