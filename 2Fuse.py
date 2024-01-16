@@ -15,7 +15,8 @@ if __name__ == '__main__':
             'active_tile_highlight':(240,240,240),'tile_border':(230,230,230),
             'score_color':(255,210,0),'score_prefix_color':(105,105,105),
             'best_score_color':(255,235,50), 'timer_border_color':(192,192,220), 
-            'normal_running_timer_color':(0,255,0), 'boosted_running_timer_color':(153,255,255)}
+            'normal_running_timer_color':(0,255,0), 'boosted_running_timer_color':(153,255,255), 
+            'game_over_remark_color':(51,153,255)}
     SCREEN = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
     SCREEN.fill(COLORS['screen_color'])
 
@@ -31,6 +32,7 @@ if __name__ == '__main__':
                 if event.type == pygame.QUIT:
                     RUNNING = False
         elif game.is_expired_game_timer():
+            game.evaluate_additional_running_time()
             game.EXIT_FLAG = True
             game.display_game_over_screen()
             pygame.display.update()

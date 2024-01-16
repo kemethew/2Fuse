@@ -22,8 +22,8 @@ class Game:
         self.COLORS = COLORS
         self.SCREEN = SCREEN
         self.GAME_START_TIME = 0
-        self.GAME_TIME_REMAINING = 1
-        self.GAME_RUNNING_TIME = 0
+        self.GAME_TIME_REMAINING = 60
+        self.GAME_ADDITIONAL_RUNNING_TIME = ""
         self.GAME_CURRENT_TIME_STAMP = 0
         self.GAME_PREVIOUS_TIME_STAMP = 0
         self.EXIT_FLAG = False
@@ -71,6 +71,7 @@ class Game:
         self.COMBO_TIME_START = 0.0
         self.COMBO_TIME_END = 0.0
         self.COMBO_COUNT = 1
+        self.HIGHEST_COMBO_COUNT = 0
         self.BOOST_IS_ACTIVE = {'RED': False, 'GREEN': False, 'BLUE': False}
         self.BOOST_START_TIME = {'RED': 0, 'GREEN': 0, 'BLUE': 0}
         self.BOOST_TIME_REMAINING = {'RED': 7, 'GREEN': 7, 'BLUE': 7}
@@ -442,6 +443,8 @@ class Game:
         COMBO_TIME = self.COMBO_TIME_END - self.COMBO_TIME_START
         if COMBO_TIME <= 1.7:
             self.COMBO_COUNT += 1
+            if self.SCORE > 0 and self.HIGHEST_COMBO_COUNT < self.COMBO_COUNT:
+                self.HIGHEST_COMBO_COUNT = self.COMBO_COUNT
         else:
             self.COMBO_COUNT = 1
 
@@ -556,74 +559,75 @@ class Game:
 
     def display_boost_timers(self):
         BORDER_WIDTH, BORDER_HEIGHT, FILLER_WIDTH, FILLER_HEIGHT = 35, 45, 33, 44
+        RED_TIMER_ORIGIN_X, RED_TIMER_ORIGIN_Y = self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 10 - 131, self.BOARD_ORIGIN_Y - 90
+        GREEN_TIMER_ORIGIN_X, GREEN_TIMER_ORIGIN_Y = self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 10 - 83, self.BOARD_ORIGIN_Y - 90
+        BLUE_TIMER_ORIGIN_X, BLUE_TIMER_ORIGIN_Y = self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 10 - 35, self.BOARD_ORIGIN_Y - 90
 
-        RED_BOOST_BACKGROUND_REFILL = pygame.Rect(self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 10 - 131, self.BOARD_ORIGIN_Y - 90, BORDER_WIDTH, BORDER_HEIGHT)
-        GREEN_BOOST_BACKGROUND_REFILL = pygame.Rect(self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 10 - 83, self.BOARD_ORIGIN_Y - 90, BORDER_WIDTH, BORDER_HEIGHT)
-        BLUE_BOOST_BACKGROUND_REFILL = pygame.Rect(self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 10 - 35, self.BOARD_ORIGIN_Y - 90, BORDER_WIDTH, BORDER_HEIGHT)
+        RED_BOOST_BACKGROUND_REFILL = pygame.Rect(RED_TIMER_ORIGIN_X, RED_TIMER_ORIGIN_Y, BORDER_WIDTH, BORDER_HEIGHT)
+        GREEN_BOOST_BACKGROUND_REFILL = pygame.Rect(GREEN_TIMER_ORIGIN_X, GREEN_TIMER_ORIGIN_Y, BORDER_WIDTH, BORDER_HEIGHT)
+        BLUE_BOOST_BACKGROUND_REFILL = pygame.Rect(BLUE_TIMER_ORIGIN_X, BLUE_TIMER_ORIGIN_Y, BORDER_WIDTH, BORDER_HEIGHT)
 
-        RED_BOOST_TIMER_BORDER = pygame.Rect(self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 10 - 131, self.BOARD_ORIGIN_Y - 90, BORDER_WIDTH, BORDER_HEIGHT)
-        GREEN_BOOST_TIMER_BORDER = pygame.Rect(self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 10 - 83, self.BOARD_ORIGIN_Y - 90, BORDER_WIDTH, BORDER_HEIGHT)
-        BLUE_BOOST_TIMER_BORDER = pygame.Rect(self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 10 - 35, self.BOARD_ORIGIN_Y - 90, BORDER_WIDTH, BORDER_HEIGHT)
+        RED_BOOST_TIMER_BORDER = pygame.Rect(RED_TIMER_ORIGIN_X, RED_TIMER_ORIGIN_Y, BORDER_WIDTH, BORDER_HEIGHT)
+        GREEN_BOOST_TIMER_BORDER = pygame.Rect(GREEN_TIMER_ORIGIN_X, GREEN_TIMER_ORIGIN_Y, BORDER_WIDTH, BORDER_HEIGHT)
+        BLUE_BOOST_TIMER_BORDER = pygame.Rect(BLUE_TIMER_ORIGIN_X, BLUE_TIMER_ORIGIN_Y, BORDER_WIDTH, BORDER_HEIGHT)
 
+        pygame.draw.rect(self.SCREEN, self.COLORS['screen_color'], RED_BOOST_BACKGROUND_REFILL)
+        pygame.draw.rect(self.SCREEN, self.COLORS['screen_color'], GREEN_BOOST_BACKGROUND_REFILL)
+        pygame.draw.rect(self.SCREEN, self.COLORS['screen_color'], BLUE_BOOST_BACKGROUND_REFILL)
+        pygame.draw.rect(self.SCREEN, self.COLORS['red_shape_border'], RED_BOOST_TIMER_BORDER, 1)
+        pygame.draw.rect(self.SCREEN, self.COLORS['green_shape_border'], GREEN_BOOST_TIMER_BORDER, 1)
+        pygame.draw.rect(self.SCREEN, self.COLORS['blue_shape_border'], BLUE_BOOST_TIMER_BORDER, 1)
+        pygame.display.update(RED_BOOST_BACKGROUND_REFILL)
+        pygame.display.update(GREEN_BOOST_BACKGROUND_REFILL)
+        pygame.display.update(BLUE_BOOST_BACKGROUND_REFILL)
+        pygame.display.update(RED_BOOST_TIMER_BORDER)
+        pygame.display.update(GREEN_BOOST_TIMER_BORDER)
+        pygame.display.update(BLUE_BOOST_TIMER_BORDER)
+        
         if self.BOOST_IS_ACTIVE['RED']:
             RED_BOOST_TIMER_FILLER = pygame.Rect(self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 10 - 131 + 1, self.BOARD_ORIGIN_Y - 90 + 1 + FILLER_HEIGHT * (1 - self.BOOST_TIME_REMAINING['RED'] / 7), FILLER_WIDTH, FILLER_HEIGHT * (self.BOOST_TIME_REMAINING['RED'] / 7))
-            pygame.draw.rect(self.SCREEN, self.COLORS['screen_color'], RED_BOOST_BACKGROUND_REFILL)
-            pygame.draw.rect(self.SCREEN, self.COLORS['red_shape_border'], RED_BOOST_TIMER_BORDER, 1)
             pygame.draw.rect(self.SCREEN, self.COLORS['red_tile'], RED_BOOST_TIMER_FILLER)
-            pygame.display.update(RED_BOOST_BACKGROUND_REFILL)
-            pygame.display.update(RED_BOOST_TIMER_BORDER)
             pygame.display.update(RED_BOOST_TIMER_FILLER)
-        else:
-            pygame.draw.rect(self.SCREEN, self.COLORS['screen_color'], RED_BOOST_BACKGROUND_REFILL)
-            pygame.draw.rect(self.SCREEN, self.COLORS['red_shape_border'], RED_BOOST_TIMER_BORDER, 1)
-            pygame.display.update(RED_BOOST_BACKGROUND_REFILL)
-            pygame.display.update(RED_BOOST_TIMER_BORDER)
-
         if self.BOOST_IS_ACTIVE['GREEN']:
             GREEN_BOOST_TIMER_FILLER = pygame.Rect(self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 10 - 83 + 1, self.BOARD_ORIGIN_Y - 90 + 1 + FILLER_HEIGHT * (1 - self.BOOST_TIME_REMAINING['GREEN'] / 7), FILLER_WIDTH, FILLER_HEIGHT * (self.BOOST_TIME_REMAINING['GREEN'] / 7))
-            pygame.draw.rect(self.SCREEN, self.COLORS['screen_color'], GREEN_BOOST_BACKGROUND_REFILL)
-            pygame.draw.rect(self.SCREEN, self.COLORS['green_shape_border'], GREEN_BOOST_TIMER_BORDER, 1)
             pygame.draw.rect(self.SCREEN, self.COLORS['green_tile'], GREEN_BOOST_TIMER_FILLER)
-            pygame.display.update(GREEN_BOOST_BACKGROUND_REFILL)
-            pygame.display.update(GREEN_BOOST_TIMER_BORDER)
-            pygame.display.update(GREEN_BOOST_TIMER_FILLER)
-        else:
-            pygame.draw.rect(self.SCREEN, self.COLORS['screen_color'], GREEN_BOOST_BACKGROUND_REFILL)
-            pygame.draw.rect(self.SCREEN, self.COLORS['green_shape_border'], GREEN_BOOST_TIMER_BORDER, 1)
-            pygame.display.update(GREEN_BOOST_BACKGROUND_REFILL)
-            pygame.display.update(GREEN_BOOST_TIMER_BORDER)
-        
+            pygame.display.update(GREEN_BOOST_TIMER_FILLER)            
         if self.BOOST_IS_ACTIVE['BLUE']:
             BLUE_BOOST_TIMER_FILLER = pygame.Rect(self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 10 - 35 + 1, self.BOARD_ORIGIN_Y - 90 + 1 + FILLER_HEIGHT * (1 - self.BOOST_TIME_REMAINING['BLUE'] / 7), FILLER_WIDTH, FILLER_HEIGHT * (self.BOOST_TIME_REMAINING['BLUE'] / 7))
-            pygame.draw.rect(self.SCREEN, self.COLORS['screen_color'], BLUE_BOOST_BACKGROUND_REFILL)
-            pygame.draw.rect(self.SCREEN, self.COLORS['blue_shape_border'], BLUE_BOOST_TIMER_BORDER, 1)
             pygame.draw.rect(self.SCREEN, self.COLORS['blue_tile'], BLUE_BOOST_TIMER_FILLER)
-            pygame.display.update(BLUE_BOOST_BACKGROUND_REFILL)
-            pygame.display.update(BLUE_BOOST_TIMER_BORDER)
-            pygame.display.update(BLUE_BOOST_TIMER_FILLER)
+            pygame.display.update(BLUE_BOOST_TIMER_FILLER)            
+
+    def evaluate_additional_running_time(self):
+        ADDITIONAL_RUNNING_TIME = int(time.time() - self.GAME_START_TIME - 60)
+        if len(str(ADDITIONAL_RUNNING_TIME)) == 1:
+            self.GAME_ADDITIONAL_RUNNING_TIME = f"0{ADDITIONAL_RUNNING_TIME}"
         else:
-            pygame.draw.rect(self.SCREEN, self.COLORS['screen_color'], BLUE_BOOST_BACKGROUND_REFILL)
-            pygame.draw.rect(self.SCREEN, self.COLORS['blue_shape_border'], BLUE_BOOST_TIMER_BORDER, 1)
-            pygame.display.update(BLUE_BOOST_BACKGROUND_REFILL)
-            pygame.display.update(BLUE_BOOST_TIMER_BORDER)
+            self.GAME_ADDITIONAL_RUNNING_TIME = str(ADDITIONAL_RUNNING_TIME)
 
     def display_game_over_screen(self):
         self.IS_GAME_OVER = True
         self.SCREEN.fill(self.COLORS['screen_color'])
 
-        TITLE_FONT_SIZE = 80
-        TITLE_FONT = pygame.font.Font("BebasNeue-Regular.otf", TITLE_FONT_SIZE)
-        RESULTS_IMG = TITLE_FONT.render('RESULTS', False, self.COLORS['blue_shape_border'])
+        TITLE_FONT = pygame.font.Font("BebasNeue-Regular.otf", 85)
+        MINI_SUBTITLE_FONT = pygame.font.Font("BebasNeue-Regular.otf", 29)
+        SUBTITLE_FONT = pygame.font.Font("BebasNeue-Regular.otf", 30)
+        CONTENT_VALUE_FONT = pygame.font.Font("BebasNeue-Regular.otf", 30)
+        SCORE_VALUE_COORDINATE = (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 - 15 - 17 * (len(str(self.SCORE)) - 1), self.BOARD_ORIGIN_Y + 95)
 
-        SUBTITLE_FONT_SIZE = 29
-        SUBTITLE_FONT = pygame.font.Font("BebasNeue-Regular.otf", SUBTITLE_FONT_SIZE)
-        HIGHEST_COMBO_IMG = SUBTITLE_FONT.render('HIGHEST COMBO', False, self.COLORS['blue_shape_border'])
-        TIME_PLAYED_IMG = SUBTITLE_FONT.render('HIGHEST COMBO', False, self.COLORS['blue_shape_border'])
+        RESULTS_TITLE_IMG = TITLE_FONT.render('RESULTS', False, self.COLORS['game_over_remark_color'])
+        SCORE_TITLE_IMG = MINI_SUBTITLE_FONT.render('SCORE', False, self.COLORS['game_over_remark_color'])
+        SCORE_VALUE_IMG = TITLE_FONT.render(str(self.SCORE), False, self.COLORS['color_white'])
+        HIGHEST_COMBO_TITLE_IMG = SUBTITLE_FONT.render('HIGHEST COMBO -', False, self.COLORS['game_over_remark_color'])
+        HIGHEST_COMBO_VALUE_IMG = CONTENT_VALUE_FONT.render(str(self.HIGHEST_COMBO_COUNT), False, self.COLORS['score_color'])
+        TIME_PLAYED_TITLE_IMG = SUBTITLE_FONT.render('TIME PLAYED -', False, self.COLORS['game_over_remark_color'])
+        TIME_PLAYED_VALUE_IMG = CONTENT_VALUE_FONT.render(f"1:{self.GAME_ADDITIONAL_RUNNING_TIME}", False, self.COLORS['score_color'])
 
-        CONTENT_FONT_SIZE = 29
-        CONTENT_FONT = pygame.font.Font("BebasNeue-Regular.otf", CONTENT_FONT_SIZE)
-        CONTENT_IMG = CONTENT_FONT.render('TIME PLAYED', False, self.COLORS['blue_shape_border'])
-
-
-        self.SCREEN.blit(RESULTS_IMG, (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 - 103, self.BOARD_ORIGIN_Y - 60))
-        self.SCREEN.blit(HIGHEST_COMBO_IMG, (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 - 150, self.BOARD_ORIGIN_Y + 100))
+        self.SCREEN.blit(RESULTS_TITLE_IMG, (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 - 108, self.BOARD_ORIGIN_Y - 60))
+        pygame.draw.line(self.SCREEN, self.COLORS['color_white'], (self.BOARD_ORIGIN_X + 80, self.BOARD_ORIGIN_Y + 36), (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 80, self.BOARD_ORIGIN_Y + 36), 2)
+        self.SCREEN.blit(SCORE_TITLE_IMG, (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 - 26, self.BOARD_ORIGIN_Y + 63))
+        self.SCREEN.blit(SCORE_VALUE_IMG, SCORE_VALUE_COORDINATE)
+        self.SCREEN.blit(HIGHEST_COMBO_TITLE_IMG, (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 - 100, self.BOARD_ORIGIN_Y + 225))
+        self.SCREEN.blit(HIGHEST_COMBO_VALUE_IMG, (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 63, self.BOARD_ORIGIN_Y + 225))
+        self.SCREEN.blit(TIME_PLAYED_TITLE_IMG, (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 - 87, self.BOARD_ORIGIN_Y + 265))
+        self.SCREEN.blit(TIME_PLAYED_VALUE_IMG, (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 47, self.BOARD_ORIGIN_Y + 265))
+        pygame.draw.line(self.SCREEN, self.COLORS['color_white'], (self.BOARD_ORIGIN_X + 80, self.BOARD_ORIGIN_Y + 335), (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 80, self.BOARD_ORIGIN_Y + 335), 2)
