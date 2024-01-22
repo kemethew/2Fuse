@@ -22,7 +22,7 @@ class Game:
         self.COLORS = COLORS
         self.SCREEN = SCREEN
         self.GAME_START_TIME = 0
-        self.GAME_TIME_REMAINING = 60
+        self.GAME_TIME_REMAINING = 1
         self.GAME_ADDITIONAL_RUNNING_TIME = ""
         self.GAME_CURRENT_TIME_STAMP = 0
         self.GAME_PREVIOUS_TIME_STAMP = 0
@@ -612,7 +612,23 @@ class Game:
         MINI_SUBTITLE_FONT = pygame.font.Font("BebasNeue-Regular.otf", 29)
         SUBTITLE_FONT = pygame.font.Font("BebasNeue-Regular.otf", 30)
         CONTENT_VALUE_FONT = pygame.font.Font("BebasNeue-Regular.otf", 30)
+        DECISION_FONT = pygame.font.Font("BebasNeue-Regular.otf", 65)
+        SUBDECISION_FONT = pygame.font.Font("BebasNeue-Regular.otf", 60)
         SCORE_VALUE_COORDINATE = (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 - 15 - 17 * (len(str(self.SCORE)) - 1), self.BOARD_ORIGIN_Y + 95)
+        PLAY_AGAIN_BUTTON_POINTS = ((self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 115, self.BOARD_ORIGIN_Y + 367), 
+                                    (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 115, self.BOARD_ORIGIN_Y + 386), 
+                                    (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 135, self.BOARD_ORIGIN_Y + 386), 
+                                    (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 115, self.BOARD_ORIGIN_Y + 386), 
+                                    (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 135, self.BOARD_ORIGIN_Y + 386), 
+                                    (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 115, self.BOARD_ORIGIN_Y + 405)
+                                    )
+        EXIT_BUTTON_POINTS = ((self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 45, self.BOARD_ORIGIN_Y + 430), 
+                              (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 45, self.BOARD_ORIGIN_Y + 448), 
+                              (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 65, self.BOARD_ORIGIN_Y + 448), 
+                              (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 45, self.BOARD_ORIGIN_Y + 448), 
+                              (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 65, self.BOARD_ORIGIN_Y + 448), 
+                              (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 45, self.BOARD_ORIGIN_Y + 466)
+                              )
 
         RESULTS_TITLE_IMG = TITLE_FONT.render('RESULTS', False, self.COLORS['game_over_remark_color'])
         SCORE_TITLE_IMG = MINI_SUBTITLE_FONT.render('SCORE', False, self.COLORS['game_over_remark_color'])
@@ -621,6 +637,8 @@ class Game:
         HIGHEST_COMBO_VALUE_IMG = CONTENT_VALUE_FONT.render(str(self.HIGHEST_COMBO_COUNT), False, self.COLORS['score_color'])
         TIME_PLAYED_TITLE_IMG = SUBTITLE_FONT.render('TIME PLAYED -', False, self.COLORS['game_over_remark_color'])
         TIME_PLAYED_VALUE_IMG = CONTENT_VALUE_FONT.render(f"1:{self.GAME_ADDITIONAL_RUNNING_TIME}", False, self.COLORS['score_color'])
+        PLAY_AGAIN_TITLE_IMG = DECISION_FONT.render('PLAY AGAIN', False, self.COLORS['color_white'])
+        EXIT_TITLE_IMG = SUBDECISION_FONT.render('EXIT', False, self.COLORS['color_white'])
 
         self.SCREEN.blit(RESULTS_TITLE_IMG, (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 - 108, self.BOARD_ORIGIN_Y - 60))
         pygame.draw.line(self.SCREEN, self.COLORS['color_white'], (self.BOARD_ORIGIN_X + 80, self.BOARD_ORIGIN_Y + 36), (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 80, self.BOARD_ORIGIN_Y + 36), 2)
@@ -631,3 +649,10 @@ class Game:
         self.SCREEN.blit(TIME_PLAYED_TITLE_IMG, (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 - 87, self.BOARD_ORIGIN_Y + 265))
         self.SCREEN.blit(TIME_PLAYED_VALUE_IMG, (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 47, self.BOARD_ORIGIN_Y + 265))
         pygame.draw.line(self.SCREEN, self.COLORS['color_white'], (self.BOARD_ORIGIN_X + 80, self.BOARD_ORIGIN_Y + 335), (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 80, self.BOARD_ORIGIN_Y + 335), 2)
+        self.SCREEN.blit(PLAY_AGAIN_TITLE_IMG, (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 - 115, self.BOARD_ORIGIN_Y + 350))
+        pygame.draw.polygon(self.SCREEN, self.COLORS['green_tile'], PLAY_AGAIN_BUTTON_POINTS[0:3])
+        pygame.draw.polygon(self.SCREEN, self.COLORS['green_shape_border'], PLAY_AGAIN_BUTTON_POINTS[3:])
+        self.SCREEN.blit(EXIT_TITLE_IMG, (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 - 42, self.BOARD_ORIGIN_Y + 414))
+        pygame.draw.polygon(self.SCREEN, self.COLORS['red_tile'], EXIT_BUTTON_POINTS[0:3])
+        pygame.draw.polygon(self.SCREEN, self.COLORS['red_shape_border'], EXIT_BUTTON_POINTS[3:])
+
