@@ -14,7 +14,7 @@ if __name__ == '__main__':
             'color_white':(255,255,255),'active_tile_halo':(70,200,200),
             'active_tile_highlight':(240,240,240),'tile_border':(230,230,230),
             'score_color':(255,210,0),'score_prefix_color':(105,105,105),
-            'best_score_color':(255,235,50), 'timer_border_color':(192,192,220), 
+            'best_score_color':(255,180,30), 'timer_border_color':(192,192,220), 
             'normal_running_timer_color':(0,255,0), 'boosted_running_timer_color':(153,255,255), 
             'game_over_remark_color':(51,153,255)}
     SCREEN = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
@@ -31,9 +31,19 @@ if __name__ == '__main__':
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     RUNNING = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    MOUSE_POS_X = pygame.mouse.get_pos()[0]
+                    MOUSE_POS_Y = pygame.mouse.get_pos()[1]
+                    if MOUSE_POS_X >= 298 and MOUSE_POS_X <= 407 and MOUSE_POS_Y >= 594 and MOUSE_POS_Y <= 639:
+                        RUNNING = False
+                    elif MOUSE_POS_X >= 226 and MOUSE_POS_X <= 477 and MOUSE_POS_Y >= 532 and MOUSE_POS_Y <= 580:
+                        SCREEN.fill(COLORS['screen_color'])
+                        game.display_gameboard()
+                        game.reset_game_variables()
         elif game.is_expired_game_timer():
-            game.evaluate_additional_running_time()
             game.EXIT_FLAG = True
+            game.update_high_score()
+            game.evaluate_additional_running_time()
             game.display_game_over_screen()
             pygame.display.update()
         else:

@@ -22,7 +22,7 @@ class Game:
         self.COLORS = COLORS
         self.SCREEN = SCREEN
         self.GAME_START_TIME = 0
-        self.GAME_TIME_REMAINING = 1
+        self.GAME_TIME_REMAINING = .1
         self.GAME_ADDITIONAL_RUNNING_TIME = ""
         self.GAME_CURRENT_TIME_STAMP = 0
         self.GAME_PREVIOUS_TIME_STAMP = 0
@@ -68,6 +68,7 @@ class Game:
         self.ACTIVE_TILE_1_INDEX = []
         self.ACTIVE_TILE_2_INDEX = []
         self.SCORE = 0
+        self.HIGH_SCORE = 0
         self.COMBO_TIME_START = 0.0
         self.COMBO_TIME_END = 0.0
         self.COMBO_COUNT = 1
@@ -504,15 +505,20 @@ class Game:
             self.SCORE += COMBINED_TILE_VALUE + ADDITIONAL_COMBO_SCORE
 
     def display_score(self):
-        SCORE_SURFACE = pygame.Rect(self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y - 97, 140, 55)
-        FONT = pygame.font.Font("BebasNeue-Regular.otf",50)
+        SCORE_SURFACE = pygame.Rect(self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y - 96, 140, 55)
+        ACTIVE_SCORE_FONT = pygame.font.Font("BebasNeue-Regular.otf", 50)
+        BEST_SCORE_FONT = pygame.font.Font("BebasNeue-Regular.otf", 31)
         SCORE_STRING = "0" * (7 - len(str(self.SCORE))) + str(self.SCORE)
         SCORE_PREFIX_STRING = "000000"
-        SCORE_IMG = FONT.render(SCORE_STRING, False, self.COLORS['score_color'])
-        SCORE_PREFIX_IMG = FONT.render(SCORE_PREFIX_STRING[:len(SCORE_PREFIX_STRING) - len(str(self.SCORE)) + 1], False, self.COLORS['score_prefix_color'])
+        SCORE_IMG = ACTIVE_SCORE_FONT.render(SCORE_STRING, False, self.COLORS['score_color'])
+        SCORE_PREFIX_IMG = ACTIVE_SCORE_FONT.render(SCORE_PREFIX_STRING[:len(SCORE_PREFIX_STRING) - len(str(self.SCORE)) + 1], False, self.COLORS['score_prefix_color'])
+        BEST_TITLE_IMG = BEST_SCORE_FONT.render('BEST', False, self.COLORS['color_white'])
+        BEST_SCORE_IMG = BEST_SCORE_FONT.render(str(self.HIGH_SCORE), False, self.COLORS['best_score_color'])
         pygame.draw.rect(self.SCREEN, self.COLORS['screen_color'], SCORE_SURFACE)
-        self.SCREEN.blit(SCORE_IMG, (self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y - 97))
-        self.SCREEN.blit(SCORE_PREFIX_IMG, (self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y - 97))
+        self.SCREEN.blit(BEST_TITLE_IMG, (self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y - 123))
+        self.SCREEN.blit(BEST_SCORE_IMG, (self.BOARD_ORIGIN_X + 50, self.BOARD_ORIGIN_Y - 123))
+        self.SCREEN.blit(SCORE_IMG, (self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y - 96))
+        self.SCREEN.blit(SCORE_PREFIX_IMG, (self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y - 96))
         pygame.display.update(SCORE_SURFACE)
 
     def is_expired_game_timer(self):
@@ -529,16 +535,10 @@ class Game:
             return False
 
     def display_game_timer(self):
-        # ELAPSED_TIME_THIS_LOOP = self.GAME_CURRENT_TIME_STAMP - self.GAME_PREVIOUS_TIME_STAMP
-        # if self.BOOST_IS_ACTIVE['BLUE']:
-        #     self.GAME_TIME_REMAINING -= ELAPSED_TIME_THIS_LOOP / 2
-        # else:
-        #     self.GAME_TIME_REMAINING -= ELAPSED_TIME_THIS_LOOP
-
         SECOND = int(self.GAME_TIME_REMAINING)
         CENTISECOND = int((self.GAME_TIME_REMAINING - SECOND) * 100)
         TIME_SURFACE = pygame.Rect(self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y - 40, 65, 26)
-        FONT = pygame.font.Font("BebasNeue-Regular.otf",34)
+        FONT = pygame.font.Font("BebasNeue-Regular.otf", 34)
         TITLE_IMG = FONT.render(f"{SECOND}:{CENTISECOND}", False, self.COLORS['color_white'])
         pygame.draw.rect(self.SCREEN, self.COLORS['screen_color'], TIME_SURFACE)
         self.SCREEN.blit(TITLE_IMG, (self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y - 45))
@@ -649,10 +649,33 @@ class Game:
         self.SCREEN.blit(TIME_PLAYED_TITLE_IMG, (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 - 87, self.BOARD_ORIGIN_Y + 265))
         self.SCREEN.blit(TIME_PLAYED_VALUE_IMG, (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 47, self.BOARD_ORIGIN_Y + 265))
         pygame.draw.line(self.SCREEN, self.COLORS['color_white'], (self.BOARD_ORIGIN_X + 80, self.BOARD_ORIGIN_Y + 335), (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 80, self.BOARD_ORIGIN_Y + 335), 2)
+        # pygame.draw.rect(self.SCREEN, self.COLORS['active_tile_halo'], pygame.Rect(226, 532, 251, 48))
         self.SCREEN.blit(PLAY_AGAIN_TITLE_IMG, (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 - 115, self.BOARD_ORIGIN_Y + 350))
         pygame.draw.polygon(self.SCREEN, self.COLORS['green_tile'], PLAY_AGAIN_BUTTON_POINTS[0:3])
         pygame.draw.polygon(self.SCREEN, self.COLORS['green_shape_border'], PLAY_AGAIN_BUTTON_POINTS[3:])
+        # pygame.draw.rect(self.SCREEN, self.COLORS['active_tile_halo'], pygame.Rect(298, 594, 109, 45))
         self.SCREEN.blit(EXIT_TITLE_IMG, (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 - 42, self.BOARD_ORIGIN_Y + 414))
         pygame.draw.polygon(self.SCREEN, self.COLORS['red_tile'], EXIT_BUTTON_POINTS[0:3])
         pygame.draw.polygon(self.SCREEN, self.COLORS['red_shape_border'], EXIT_BUTTON_POINTS[3:])
 
+    def reset_game_variables(self):
+        self.GAME_TIME_REMAINING = 60
+        self.GAME_ADDITIONAL_RUNNING_TIME = ""
+        self.GAME_START_TIME = self.GAME_CURRENT_TIME_STAMP = time.time()
+        self.GAME_PREVIOUS_TIME_STAMP = 0
+        self.EXIT_FLAG = False
+        self.IS_GAME_BEGINNING = True
+        self.IS_GAME_OVER = False
+        self.CELL_CONTENT = [[None for _ in range(self.BLOCKS_PER_LINE)] for _ in range(self.BLOCKS_PER_LINE)]
+        self.ACTIVE_TILE_1 = None
+        self.ACTIVE_TILE_2 = None
+        self.ACTIVE_TILE_1_INDEX = []
+        self.ACTIVE_TILE_2_INDEX = []
+        self.SCORE = 0
+        self.COMBO_TIME_START = 0.0
+        self.COMBO_TIME_END = 0.0
+        self.COMBO_COUNT = 1
+
+    def update_high_score(self):
+        if self.SCORE > self.HIGH_SCORE:
+            self.HIGH_SCORE = self.SCORE
