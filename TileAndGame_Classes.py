@@ -21,6 +21,7 @@ class Game:
         self.SCREEN_HEIGHT = SCREEN_HEIGHT
         self.COLORS = COLORS
         self.SCREEN = SCREEN
+        self.IS_PAUSED = False
         self.GAME_START_TIME = 0
         self.GAME_TIME_REMAINING = .1
         self.GAME_ADDITIONAL_RUNNING_TIME = ""
@@ -447,10 +448,19 @@ class Game:
             if self.SCORE > 0 and self.HIGHEST_COMBO_COUNT < self.COMBO_COUNT:
                 self.HIGHEST_COMBO_COUNT = self.COMBO_COUNT
         else:
+            self.hide_combo_count()
             self.COMBO_COUNT = 1
 
         if self.COMBO_COUNT > 4:
             self.display_combo_count()
+
+    def evaluate_expired_combo_time(self):
+        if time.time() - self.COMBO_TIME_START > 1.7:
+            self.hide_combo_count()
+
+    def hide_combo_count(self):
+        pygame.draw.rect(self.SCREEN, self.COLORS['screen_color'], pygame.Rect(305, 42, 70, 86))
+        pygame.display.update(pygame.Rect(300, 500, 300, 200))
 
     def display_combo_count(self):
         COMBO_TITLE_FONT_SIZE = 31
@@ -460,7 +470,7 @@ class Game:
         COMBO_COUNT_FONT = pygame.font.Font("BebasNeue-Regular.otf", COMBO_COUNT_FONT_SIZE)
         COMBO_COUNT_IMG = COMBO_COUNT_FONT.render(str(self.COMBO_COUNT), False, self.COLORS['color_white'])
         COMBO_COUNT_ORIGIN_X = 0
-        if self.COMBO_COUNT < 9:
+        if self.COMBO_COUNT < 10:
             COMBO_COUNT_ORIGIN_X =  self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 - 11
         else:
             COMBO_COUNT_ORIGIN_X =  self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 - 18
@@ -505,7 +515,7 @@ class Game:
             self.SCORE += COMBINED_TILE_VALUE + ADDITIONAL_COMBO_SCORE
 
     def display_score(self):
-        SCORE_SURFACE = pygame.Rect(self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y - 96, 140, 55)
+        SCORE_SURFACE = pygame.Rect(self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y - 93, 140, 55)
         ACTIVE_SCORE_FONT = pygame.font.Font("BebasNeue-Regular.otf", 50)
         BEST_SCORE_FONT = pygame.font.Font("BebasNeue-Regular.otf", 31)
         SCORE_STRING = "0" * (7 - len(str(self.SCORE))) + str(self.SCORE)
@@ -515,10 +525,10 @@ class Game:
         BEST_TITLE_IMG = BEST_SCORE_FONT.render('BEST', False, self.COLORS['color_white'])
         BEST_SCORE_IMG = BEST_SCORE_FONT.render(str(self.HIGH_SCORE), False, self.COLORS['best_score_color'])
         pygame.draw.rect(self.SCREEN, self.COLORS['screen_color'], SCORE_SURFACE)
-        self.SCREEN.blit(BEST_TITLE_IMG, (self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y - 123))
-        self.SCREEN.blit(BEST_SCORE_IMG, (self.BOARD_ORIGIN_X + 50, self.BOARD_ORIGIN_Y - 123))
-        self.SCREEN.blit(SCORE_IMG, (self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y - 96))
-        self.SCREEN.blit(SCORE_PREFIX_IMG, (self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y - 96))
+        self.SCREEN.blit(BEST_TITLE_IMG, (self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y - 120))
+        self.SCREEN.blit(BEST_SCORE_IMG, (self.BOARD_ORIGIN_X + 50, self.BOARD_ORIGIN_Y - 120))
+        self.SCREEN.blit(SCORE_IMG, (self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y - 93))
+        self.SCREEN.blit(SCORE_PREFIX_IMG, (self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y - 93))
         pygame.display.update(SCORE_SURFACE)
 
     def is_expired_game_timer(self):
@@ -679,3 +689,14 @@ class Game:
     def update_high_score(self):
         if self.SCORE > self.HIGH_SCORE:
             self.HIGH_SCORE = self.SCORE
+
+    def display_pause_option(self):
+        PAUSE_BUTTON_BORDER = pygame.Rect(570,30,40,40)
+        PAUSE_BUTTON_I = pygame.Rect(580,38,7,24)
+        PAUSE_BUTTON_II = pygame.Rect(593,38,7,24)
+        pygame.draw.rect(self.SCREEN, self.COLORS['darker_semi_grey'], PAUSE_BUTTON_BORDER, 1, 7)
+        pygame.draw.rect(self.SCREEN, self.COLORS['semi_grey'], PAUSE_BUTTON_I, border_radius = 5)
+        pygame.draw.rect(self.SCREEN, self.COLORS['semi_grey'], PAUSE_BUTTON_II, border_radius = 5)
+        pygame.display.update(PAUSE_BUTTON_BORDER)
+        pygame.display.update(PAUSE_BUTTON_I)
+        pygame.display.update(PAUSE_BUTTON_II)

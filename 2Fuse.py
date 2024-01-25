@@ -16,7 +16,8 @@ if __name__ == '__main__':
             'score_color':(255,210,0),'score_prefix_color':(105,105,105),
             'best_score_color':(255,180,30), 'timer_border_color':(192,192,220), 
             'normal_running_timer_color':(0,255,0), 'boosted_running_timer_color':(153,255,255), 
-            'game_over_remark_color':(51,153,255)}
+            'game_over_remark_color':(51,153,255), 'semi_grey':(192,192,192), 
+            'darker_semi_grey':(153,153,153)}
     SCREEN = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
     SCREEN.fill(COLORS['screen_color'])
 
@@ -47,8 +48,10 @@ if __name__ == '__main__':
             game.display_game_over_screen()
             pygame.display.update()
         else:
+            game.display_pause_option()
             game.display_game_timer()
             game.check_expired_boost_timers()
+            game.evaluate_expired_combo_time()
             game.display_boost_timers()
             game.assign_tiles()
             game.IS_GAME_BEGINNING = False
@@ -84,12 +87,12 @@ if __name__ == '__main__':
                                     pygame.time.delay(40)
                                     game.refresh_active_tiles()
                                 else:
+                                    game.hide_combo_count()
                                     game.COMBO_TIME_START = 0.0
                                     pygame.time.delay(40)
                                     game.refresh_active_tiles()
                             else:
                                 pass
-
                     except IndexError:
                         pass
 
@@ -101,5 +104,5 @@ if __name__ == '__main__':
 # Issues I need to look into:
 # 1. Tiles are a pixel off the board gridlines. Look into drawing Rectangles and Lines
 # 2. Similar to the first issue, polygons are a pixel off the Rectangular Tiles.
-# 3. Loading tile must be in front of highlighted till refill
+# 3. Loading tile must be in front of highlighted til refill
 # 4. Color gradient background
