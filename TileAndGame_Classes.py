@@ -27,8 +27,10 @@ class Game:
         self.GAME_ADDITIONAL_RUNNING_TIME = ""
         self.GAME_CURRENT_TIME_STAMP = 0
         self.GAME_PREVIOUS_TIME_STAMP = 0
+        self.GETTING_READY_START = 0
         self.EXIT_FLAG = False
         self.IS_GAME_BEGINNING = True
+        self.IS_GETTING_READY = True
         self.IS_GAME_OVER = False
         self.BOARD_DIMENSION = 560
         self.BOARD_ORIGIN_X = self.SCREEN_WIDTH/2 - self.BOARD_DIMENSION/2
@@ -91,7 +93,26 @@ class Game:
                              (self.BOARD_ORIGIN_X + self.GRID_GAP_DIMENSION * (1 + i), self.BOARD_ORIGIN_Y),
                              (self.BOARD_ORIGIN_X + self.GRID_GAP_DIMENSION * (1 + i), self.BOARD_ORIGIN_Y + self.BOARD_DIMENSION),
                              self.GRIDLINE_WIDTH)
-        pygame.display.update(BOARD_RECT)
+        pygame.display.update()
+    
+    def display_game_screen_components(self):
+        self.display_gameboard()
+        self.display_pause_option()
+        self.display_game_timer()
+        self.display_boost_timers()
+        self.display_score()
+
+    def display_get_ready_surface(self):
+            GET_READY_SURFACE = pygame.Surface((680,220), pygame.SRCALPHA)
+            GET_READY_SURFACE.fill((10,10,10,200))
+            self.SCREEN.blit(GET_READY_SURFACE, (0,340))
+            pygame.display.update()
+
+    def display_get_ready_text(self):
+        FONT = pygame.font.Font("BebasNeue-Regular.otf", 82)
+        GET_READY_TEXT = FONT.render("GET READY...", False, self.COLORS['color_white'])
+        self.SCREEN.blit(GET_READY_TEXT, (190,402))
+        pygame.display.update()
 
     def refresh_active_tiles(self):
         CELL_1_CENTER_X = self.BOARD_ORIGIN_X + self.GRID_GAP_DIMENSION * (self.ACTIVE_TILE_1_INDEX[1] + 0.5)
@@ -545,11 +566,15 @@ class Game:
             return False
 
     def display_game_timer(self):
-        SECOND = int(self.GAME_TIME_REMAINING)
-        CENTISECOND = int((self.GAME_TIME_REMAINING - SECOND) * 100)
+        if self.IS_GETTING_READY:
+            SECOND = 60
+            CENTISECOND = 0
+        else:
+            SECOND = int(self.GAME_TIME_REMAINING)
+            CENTISECOND = int((self.GAME_TIME_REMAINING - SECOND) * 100)
         TIME_SURFACE = pygame.Rect(self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y - 40, 65, 26)
         FONT = pygame.font.Font("BebasNeue-Regular.otf", 34)
-        TITLE_IMG = FONT.render(f"{SECOND}:{CENTISECOND}", False, self.COLORS['color_white'])
+        TITLE_IMG = FONT.render(f"{SECOND}:{CENTISECOND:02d}", False, self.COLORS['color_white'])
         pygame.draw.rect(self.SCREEN, self.COLORS['screen_color'], TIME_SURFACE)
         self.SCREEN.blit(TITLE_IMG, (self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y - 45))
         pygame.display.update(TIME_SURFACE)
@@ -587,12 +612,7 @@ class Game:
         pygame.draw.rect(self.SCREEN, self.COLORS['red_shape_border'], RED_BOOST_TIMER_BORDER, 1)
         pygame.draw.rect(self.SCREEN, self.COLORS['green_shape_border'], GREEN_BOOST_TIMER_BORDER, 1)
         pygame.draw.rect(self.SCREEN, self.COLORS['blue_shape_border'], BLUE_BOOST_TIMER_BORDER, 1)
-        pygame.display.update(RED_BOOST_BACKGROUND_REFILL)
-        pygame.display.update(GREEN_BOOST_BACKGROUND_REFILL)
-        pygame.display.update(BLUE_BOOST_BACKGROUND_REFILL)
-        pygame.display.update(RED_BOOST_TIMER_BORDER)
-        pygame.display.update(GREEN_BOOST_TIMER_BORDER)
-        pygame.display.update(BLUE_BOOST_TIMER_BORDER)
+        pygame.display.update(pygame.Rect((RED_TIMER_ORIGIN_X, RED_TIMER_ORIGIN_Y, 100, 45)))
         
         if self.BOOST_IS_ACTIVE['RED']:
             RED_BOOST_TIMER_FILLER = pygame.Rect(self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 10 - 131 + 1, self.BOARD_ORIGIN_Y - 90 + 1 + FILLER_HEIGHT * (1 - self.BOOST_TIME_REMAINING['RED'] / 7), FILLER_WIDTH, FILLER_HEIGHT * (self.BOOST_TIME_REMAINING['RED'] / 7))
@@ -700,3 +720,4 @@ class Game:
         pygame.display.update(PAUSE_BUTTON_BORDER)
         pygame.display.update(PAUSE_BUTTON_I)
         pygame.display.update(PAUSE_BUTTON_II)
+        

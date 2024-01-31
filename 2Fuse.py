@@ -22,13 +22,28 @@ if __name__ == '__main__':
     SCREEN.fill(COLORS['screen_color'])
 
     game = Game(SCREEN_WIDTH, SCREEN_HEIGHT, COLORS, SCREEN)
-    game.display_gameboard()
-    game.GAME_START_TIME = game.GAME_CURRENT_TIME_STAMP = time.time()
     RUNNING = True
     while RUNNING:
-        if game.IS_GAME_OVER:
+        if game.IS_GETTING_READY:
+            CURRENT_TIME = time.time()
+            if game.GETTING_READY_START == 0:
+                game.GETTING_READY_START = CURRENT_TIME
+                game.display_game_screen_components()
+                game.display_get_ready_surface()
+            elif CURRENT_TIME - game.GETTING_READY_START > 0.25 and not CURRENT_TIME - game.GETTING_READY_START > 1.5:
+                # game.display_game_screen_components()
+                # game.display_get_ready_surface()
+                game.display_get_ready_text()
+            elif CURRENT_TIME - game.GETTING_READY_START > 1.5:
+                game.IS_GETTING_READY = False
+                game.reset_game_variables()
+                game.SCREEN.fill(game.COLORS['screen_color'])
+                game.display_game_screen_components()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    RUNNING = False
+        elif game.IS_GAME_OVER:
             game.display_game_over_screen()
-            pygame.display.update()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     RUNNING = False
@@ -39,14 +54,13 @@ if __name__ == '__main__':
                         RUNNING = False
                     elif MOUSE_POS_X >= 226 and MOUSE_POS_X <= 477 and MOUSE_POS_Y >= 532 and MOUSE_POS_Y <= 580:
                         SCREEN.fill(COLORS['screen_color'])
-                        game.display_gameboard()
-                        game.reset_game_variables()
+                        game.IS_GETTING_READY = True
+                        game.GETTING_READY_START = 0
         elif game.is_expired_game_timer():
             game.EXIT_FLAG = True
             game.update_high_score()
             game.evaluate_additional_running_time()
             game.display_game_over_screen()
-            pygame.display.update()
         else:
             game.display_pause_option()
             game.display_game_timer()
@@ -95,9 +109,8 @@ if __name__ == '__main__':
                                 pass
                     except IndexError:
                         pass
-
-            pygame.display.update()
-
+        pygame.display.update()
+            
     pygame.quit()
     sys.exit()
 
