@@ -1,4 +1,4 @@
-import pygame, sys, time
+import pygame, sys, time, threading
 from TileAndGame_Classes import Game
 
 
@@ -26,19 +26,29 @@ if __name__ == '__main__':
     while RUNNING:
         if game.IS_GETTING_READY:
             CURRENT_TIME = time.time()
+            TIME_ELAPSED = CURRENT_TIME - game.GETTING_READY_START
             if game.GETTING_READY_START == 0:
                 game.GETTING_READY_START = CURRENT_TIME
                 game.display_game_screen_components()
                 game.display_get_ready_surface()
-            elif CURRENT_TIME - game.GETTING_READY_START > 0.25 and not CURRENT_TIME - game.GETTING_READY_START > 1.5:
-                # game.display_game_screen_components()
-                # game.display_get_ready_surface()
+
+                game.reset_cell_contents()
+            elif TIME_ELAPSED > 0 and TIME_ELAPSED < 0.25:
+                pass
+            elif TIME_ELAPSED > 0.25 and TIME_ELAPSED < 1.5:
                 game.display_get_ready_text()
-            elif CURRENT_TIME - game.GETTING_READY_START > 1.5:
+            elif TIME_ELAPSED > 1.5 and TIME_ELAPSED < 3.58:
+                if game.CELL_CONTENT[0][0] is None:
+                    game.SCREEN.fill(game.COLORS['screen_color'])
+                    game.display_game_screen_components()
+                    game.assign_tiles()
+                else:
+                    CELL_ROW = int((TIME_ELAPSED - 1.5) // 0.52)
+                    CELL_COLUMN = int((TIME_ELAPSED - 1.5 - CELL_ROW * 0.52) // 0.13)
+                    game.render_get_ready_tile(CELL_ROW, CELL_COLUMN)
+            else:
                 game.IS_GETTING_READY = False
                 game.reset_game_variables()
-                game.SCREEN.fill(game.COLORS['screen_color'])
-                game.display_game_screen_components()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     RUNNING = False
@@ -69,7 +79,8 @@ if __name__ == '__main__':
             game.display_boost_timers()
             game.assign_tiles()
             game.IS_GAME_BEGINNING = False
-            game.render_tiles()
+            game.render_playing_tiles
+            ()
             game.display_score()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:

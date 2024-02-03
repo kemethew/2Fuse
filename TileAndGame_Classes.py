@@ -28,6 +28,8 @@ class Game:
         self.GAME_CURRENT_TIME_STAMP = 0
         self.GAME_PREVIOUS_TIME_STAMP = 0
         self.GETTING_READY_START = 0
+        self.GET_READY_SURFACE_DISPLAYED = False
+        self.GET_READY_TEXT_DISPLAYED = False
         self.EXIT_FLAG = False
         self.IS_GAME_BEGINNING = True
         self.IS_GETTING_READY = True
@@ -103,10 +105,10 @@ class Game:
         self.display_score()
 
     def display_get_ready_surface(self):
-            GET_READY_SURFACE = pygame.Surface((680,220), pygame.SRCALPHA)
-            GET_READY_SURFACE.fill((10,10,10,200))
-            self.SCREEN.blit(GET_READY_SURFACE, (0,340))
-            pygame.display.update()
+        GET_READY_SURFACE = pygame.Surface((680,220), pygame.SRCALPHA)
+        GET_READY_SURFACE.fill((10,10,10,200))
+        self.SCREEN.blit(GET_READY_SURFACE, (0,340))
+        pygame.display.update()
 
     def display_get_ready_text(self):
         FONT = pygame.font.Font("BebasNeue-Regular.otf", 82)
@@ -138,7 +140,7 @@ class Game:
         self.ACTIVE_TILE_2_INDEX = []
 
     def assign_tiles(self):
-        if self.IS_GAME_BEGINNING or self.BOOST_IS_ACTIVE['GREEN']: 
+        if self.BOOST_IS_ACTIVE['GREEN']: 
             for i in range(self.BLOCKS_PER_LINE):
                 for j in range(self.BLOCKS_PER_LINE):
                     if self.CELL_CONTENT[i][j] is None:
@@ -223,7 +225,45 @@ class Game:
             self.CELL_CONTENT[CELL_ROW][CELL_COLUMN].LOADED = True
         else:
             pass
-    
+
+    def render_get_ready_loading_tile(self, CELL_ROW, CELL_COLUMN):
+        REMAINING_PIXELS_PER_SIDE = 6
+        RENDER_TIME = 0.13
+        INITIAL_VELOCITY_RATE_OF_RENDER = REMAINING_PIXELS_PER_SIDE * 2 / RENDER_TIME
+        DECELERATION_RATE_OF_RENDER = -REMAINING_PIXELS_PER_SIDE * 2 / RENDER_TIME ** 2
+
+        for PIXEL_NUMBER in range(REMAINING_PIXELS_PER_SIDE):
+            if self.BOOST_IS_ACTIVE['GREEN']:
+                self.CELL_CONTENT[CELL_ROW][CELL_COLUMN].LOADING = False
+                self.CELL_CONTENT[CELL_ROW][CELL_COLUMN].LOADED = True
+            elif not self.EXIT_FLAG:
+                if PIXEL_NUMBER == 0:
+                    WAIT_TIME = 0
+                elif PIXEL_NUMBER == REMAINING_PIXELS_PER_SIDE:
+                    WAIT_TIME = 2/(INITIAL_VELOCITY_RATE_OF_RENDER + 0)
+                else:
+                    LOADING_TILE_VELOCITY = math.sqrt(INITIAL_VELOCITY_RATE_OF_RENDER ** 2 + 2 *DECELERATION_RATE_OF_RENDER * 1)
+                    WAIT_TIME = 2/(INITIAL_VELOCITY_RATE_OF_RENDER + LOADING_TILE_VELOCITY)
+                    INITIAL_VELOCITY_RATE_OF_RENDER = LOADING_TILE_VELOCITY
+
+                LOADING_TILE_ORIGIN_X = self.BOARD_ORIGIN_X + self.GRID_GAP_DIMENSION * CELL_COLUMN + self.GRIDLINE_WIDTH/2 + 6 + 1 + (REMAINING_PIXELS_PER_SIDE - PIXEL_NUMBER)
+                LOADING_TILE_ORIGIN_Y = self.BOARD_ORIGIN_Y + self.GRID_GAP_DIMENSION * CELL_ROW + self.GRIDLINE_WIDTH/2 + 6 + 1 + (REMAINING_PIXELS_PER_SIDE - PIXEL_NUMBER)
+                LOADING_TILE_DIMENSION = self.GRID_GAP_DIMENSION - self.GRIDLINE_WIDTH - 12 - (REMAINING_PIXELS_PER_SIDE - PIXEL_NUMBER) * 2
+                PIXEL_NUMBER += 1
+                LOADING_TILE = pygame.Rect(LOADING_TILE_ORIGIN_X, LOADING_TILE_ORIGIN_Y, LOADING_TILE_DIMENSION, LOADING_TILE_DIMENSION)
+                pygame.draw.rect(self.SCREEN, self.COLORS['screen_color'], LOADING_TILE, 0, 12)
+                pygame.draw.rect(self.SCREEN, self.COLORS['tile_border'], LOADING_TILE, 3, 12)
+                pygame.display.update(LOADING_TILE)
+                pygame.time.delay(int(WAIT_TIME*1000))
+            else:
+                break
+
+        if not self.EXIT_FLAG:
+            self.CELL_CONTENT[CELL_ROW][CELL_COLUMN].LOADING = False
+            self.CELL_CONTENT[CELL_ROW][CELL_COLUMN].LOADED = True
+        else:
+            pass
+
     def render_loaded_tile(self, CELL_ROW, CELL_COLUMN):
         TILE_DIMENSION = self.GRID_GAP_DIMENSION - self.GRIDLINE_WIDTH - 12
         TILE_RANK = self.CELL_CONTENT[CELL_ROW][CELL_COLUMN].RANK
@@ -283,7 +323,11 @@ class Game:
 
         pygame.display.update(TILE)
 
-    def render_tiles(self):
+    def render_get_ready_tile(self, CELL_ROW, CELL_COLUMN):
+        thread = threading.Thread(target = self.render_get_ready_loading_tile, args = (CELL_ROW, CELL_COLUMN), daemon = True)
+        thread.start()
+
+    def render_playing_tiles(self):
         for i in range(self.BLOCKS_PER_LINE):
             for j in range(self.BLOCKS_PER_LINE):
                 if self.CELL_CONTENT[i][j].LOADING or [i,j] == self.ACTIVE_TILE_1_INDEX or [i,j] == self.ACTIVE_TILE_2_INDEX:
@@ -688,6 +732,9 @@ class Game:
         pygame.draw.polygon(self.SCREEN, self.COLORS['red_tile'], EXIT_BUTTON_POINTS[0:3])
         pygame.draw.polygon(self.SCREEN, self.COLORS['red_shape_border'], EXIT_BUTTON_POINTS[3:])
 
+    def reset_cell_contents(self):
+        self.CELL_CONTENT = [[None for _ in range(self.BLOCKS_PER_LINE)] for _ in range(self.BLOCKS_PER_LINE)]
+
     def reset_game_variables(self):
         self.GAME_TIME_REMAINING = 60
         self.GAME_ADDITIONAL_RUNNING_TIME = ""
@@ -696,7 +743,6 @@ class Game:
         self.EXIT_FLAG = False
         self.IS_GAME_BEGINNING = True
         self.IS_GAME_OVER = False
-        self.CELL_CONTENT = [[None for _ in range(self.BLOCKS_PER_LINE)] for _ in range(self.BLOCKS_PER_LINE)]
         self.ACTIVE_TILE_1 = None
         self.ACTIVE_TILE_2 = None
         self.ACTIVE_TILE_1_INDEX = []
