@@ -17,73 +17,94 @@ if __name__ == '__main__':
             'best_score_color':(255,180,30), 'timer_border_color':(192,192,220), 
             'normal_running_timer_color':(0,255,0), 'boosted_running_timer_color':(153,255,255), 
             'game_over_remark_color':(51,153,255), 'semi_grey':(192,192,192), 
-            'darker_semi_grey':(153,153,153)}
+            'darker_semi_grey':(153,153,153), 'semi_black':(40,40,40)}
     SCREEN = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
     SCREEN.fill(COLORS['screen_color'])
 
     game = Game(SCREEN_WIDTH, SCREEN_HEIGHT, COLORS, SCREEN)
     RUNNING = True
     while RUNNING:
-        if game.IS_GETTING_READY:
-            CURRENT_TIME = time.time()
-            TIME_ELAPSED = CURRENT_TIME - game.GETTING_READY_START
-            if game.GETTING_READY_START == 0:
-                game.GETTING_READY_START = CURRENT_TIME
-                game.display_game_screen_components()
-                game.display_get_ready_surface()
-
-                game.reset_cell_contents()
-            elif TIME_ELAPSED > 0 and TIME_ELAPSED < 0.25:
-                pass
-            elif TIME_ELAPSED > 0.25 and TIME_ELAPSED < 1.5:
-                game.display_get_ready_text()
-            elif TIME_ELAPSED > 1.5 and TIME_ELAPSED < 3.58:
-                if game.CELL_CONTENT[0][0] is None:
-                    game.SCREEN.fill(game.COLORS['screen_color'])
-                    game.display_game_screen_components()
-                    game.assign_tiles()
-                else:
-                    CELL_ROW = int((TIME_ELAPSED - 1.5) // 0.52)
-                    CELL_COLUMN = int((TIME_ELAPSED - 1.5 - CELL_ROW * 0.52) // 0.13)
-                    game.render_get_ready_tile(CELL_ROW, CELL_COLUMN)
-            else:
-                game.IS_GETTING_READY = False
-                game.reset_game_variables()
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    RUNNING = False
-        elif game.IS_GAME_OVER:
-            game.display_game_over_screen()
+        if game.IS_AT_HOMEPAGE:
+            game.display_home_screen()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     RUNNING = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     MOUSE_POS_X = pygame.mouse.get_pos()[0]
                     MOUSE_POS_Y = pygame.mouse.get_pos()[1]
+                    if MOUSE_POS_X >= 226 and MOUSE_POS_X <= 476 and MOUSE_POS_Y >= 505 and MOUSE_POS_Y <= 555:
+                        game.update_best_score()
+                        game.IS_AT_HOMEPAGE = False
+                        game.SCREEN.fill(game.COLORS['screen_color'])
+                    elif MOUSE_POS_X >= 299 and MOUSE_POS_X <= 408 and MOUSE_POS_Y >= 576 and MOUSE_POS_Y <= 620:
+                        RUNNING = False
+        elif game.IS_GETTING_READY:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    game.IS_CLOSING_GAME = True
+                    game.update_best_score()
+                    RUNNING = False
+            CURRENT_TIME = time.time()
+            TIME_ELAPSED = CURRENT_TIME - game.GETTING_READY_START
+            if game.GETTING_READY_START == 0:
+                game.EXIT_FLAG = False
+                game.GETTING_READY_START = CURRENT_TIME
+                game.SCREEN.fill(game.COLORS['screen_color'])
+                game.display_game_screen_components()
+                game.display_get_ready_surface()
+                game.reset_cell_contents()
+            elif TIME_ELAPSED > 0 and TIME_ELAPSED < 0.25:
+                pass
+            elif TIME_ELAPSED > 0.25 and TIME_ELAPSED < 1.5:
+                game.display_get_ready_text()
+            elif TIME_ELAPSED > 1.5 and TIME_ELAPSED < 3.1:
+                if game.CELL_CONTENT[0][0] is None:
+                    game.assign_tiles()
+                    game.SCREEN.fill(game.COLORS['screen_color'])
+                    game.display_game_screen_components()
+                elif not game.CELL_CONTENT[3][3].LOADING:
+                    CELL_ROW = int((TIME_ELAPSED - 1.5) // 0.40)
+                    CELL_COLUMN = int((TIME_ELAPSED - 1.5 - CELL_ROW * 0.40) // 0.10)
+                    game.render_get_ready_tile(CELL_ROW, CELL_COLUMN)
+            else:
+                game.IS_GETTING_READY = False
+                game.reset_game_variables()
+        elif game.IS_GAME_OVER:
+            game.display_game_over_screen()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    game.IS_CLOSING_GAME = True
+                    game.update_best_score()
+                    RUNNING = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    MOUSE_POS_X = pygame.mouse.get_pos()[0]
+                    MOUSE_POS_Y = pygame.mouse.get_pos()[1]
                     if MOUSE_POS_X >= 298 and MOUSE_POS_X <= 407 and MOUSE_POS_Y >= 594 and MOUSE_POS_Y <= 639:
+                        game.IS_CLOSING_GAME = True
+                        game.update_best_score()
                         RUNNING = False
                     elif MOUSE_POS_X >= 226 and MOUSE_POS_X <= 477 and MOUSE_POS_Y >= 532 and MOUSE_POS_Y <= 580:
                         SCREEN.fill(COLORS['screen_color'])
                         game.IS_GETTING_READY = True
                         game.GETTING_READY_START = 0
+                        game.reset_game_variables()
         elif game.is_expired_game_timer():
             game.EXIT_FLAG = True
-            game.update_high_score()
+            game.update_best_score()
             game.evaluate_additional_running_time()
             game.display_game_over_screen()
         else:
-            game.display_pause_option()
             game.display_game_timer()
             game.check_expired_boost_timers()
             game.evaluate_expired_combo_time()
             game.display_boost_timers()
             game.assign_tiles()
-            game.IS_GAME_BEGINNING = False
-            game.render_playing_tiles
-            ()
+            game.render_playing_tiles()
             game.display_score()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    game.IS_CLOSING_GAME = True
+                    game.update_best_score()
                     game.EXIT_FLAG = True
                     RUNNING = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -119,7 +140,7 @@ if __name__ == '__main__':
                             else:
                                 pass
                     except IndexError:
-                        pass
+                            pass
         pygame.display.update()
             
     pygame.quit()

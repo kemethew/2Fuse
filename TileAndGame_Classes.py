@@ -21,9 +21,10 @@ class Game:
         self.SCREEN_HEIGHT = SCREEN_HEIGHT
         self.COLORS = COLORS
         self.SCREEN = SCREEN
-        self.IS_PAUSED = False
+        self.IS_AT_HOMEPAGE = True
+        self.IS_CLOSING_GAME = False
         self.GAME_START_TIME = 0
-        self.GAME_TIME_REMAINING = .1
+        self.GAME_TIME_REMAINING = 60
         self.GAME_ADDITIONAL_RUNNING_TIME = ""
         self.GAME_CURRENT_TIME_STAMP = 0
         self.GAME_PREVIOUS_TIME_STAMP = 0
@@ -31,7 +32,6 @@ class Game:
         self.GET_READY_SURFACE_DISPLAYED = False
         self.GET_READY_TEXT_DISPLAYED = False
         self.EXIT_FLAG = False
-        self.IS_GAME_BEGINNING = True
         self.IS_GETTING_READY = True
         self.IS_GAME_OVER = False
         self.BOARD_DIMENSION = 560
@@ -73,7 +73,8 @@ class Game:
         self.ACTIVE_TILE_1_INDEX = []
         self.ACTIVE_TILE_2_INDEX = []
         self.SCORE = 0
-        self.HIGH_SCORE = 0
+        self.BEST_SCORE = 0
+        self.SAVED_BEST_SCORE = 0
         self.COMBO_TIME_START = 0.0
         self.COMBO_TIME_END = 0.0
         self.COMBO_COUNT = 1
@@ -99,7 +100,6 @@ class Game:
     
     def display_game_screen_components(self):
         self.display_gameboard()
-        self.display_pause_option()
         self.display_game_timer()
         self.display_boost_timers()
         self.display_score()
@@ -228,15 +228,12 @@ class Game:
 
     def render_get_ready_loading_tile(self, CELL_ROW, CELL_COLUMN):
         REMAINING_PIXELS_PER_SIDE = 6
-        RENDER_TIME = 0.13
+        RENDER_TIME = 0.10
         INITIAL_VELOCITY_RATE_OF_RENDER = REMAINING_PIXELS_PER_SIDE * 2 / RENDER_TIME
         DECELERATION_RATE_OF_RENDER = -REMAINING_PIXELS_PER_SIDE * 2 / RENDER_TIME ** 2
 
         for PIXEL_NUMBER in range(REMAINING_PIXELS_PER_SIDE):
-            if self.BOOST_IS_ACTIVE['GREEN']:
-                self.CELL_CONTENT[CELL_ROW][CELL_COLUMN].LOADING = False
-                self.CELL_CONTENT[CELL_ROW][CELL_COLUMN].LOADED = True
-            elif not self.EXIT_FLAG:
+            if not self.EXIT_FLAG:
                 if PIXEL_NUMBER == 0:
                     WAIT_TIME = 0
                 elif PIXEL_NUMBER == REMAINING_PIXELS_PER_SIDE:
@@ -261,6 +258,7 @@ class Game:
         if not self.EXIT_FLAG:
             self.CELL_CONTENT[CELL_ROW][CELL_COLUMN].LOADING = False
             self.CELL_CONTENT[CELL_ROW][CELL_COLUMN].LOADED = True
+            self.render_loaded_tile(CELL_ROW, CELL_COLUMN)
         else:
             pass
 
@@ -324,8 +322,12 @@ class Game:
         pygame.display.update(TILE)
 
     def render_get_ready_tile(self, CELL_ROW, CELL_COLUMN):
-        thread = threading.Thread(target = self.render_get_ready_loading_tile, args = (CELL_ROW, CELL_COLUMN), daemon = True)
-        thread.start()
+        if self.CELL_CONTENT[CELL_ROW][CELL_COLUMN].LOADING:
+            pass
+        else:
+            self.CELL_CONTENT[CELL_ROW][CELL_COLUMN].LOADING = True
+            thread = threading.Thread(target = self.render_get_ready_loading_tile, args = (CELL_ROW, CELL_COLUMN), daemon = True)
+            thread.start()
 
     def render_playing_tiles(self):
         for i in range(self.BLOCKS_PER_LINE):
@@ -588,7 +590,7 @@ class Game:
         SCORE_IMG = ACTIVE_SCORE_FONT.render(SCORE_STRING, False, self.COLORS['score_color'])
         SCORE_PREFIX_IMG = ACTIVE_SCORE_FONT.render(SCORE_PREFIX_STRING[:len(SCORE_PREFIX_STRING) - len(str(self.SCORE)) + 1], False, self.COLORS['score_prefix_color'])
         BEST_TITLE_IMG = BEST_SCORE_FONT.render('BEST', False, self.COLORS['color_white'])
-        BEST_SCORE_IMG = BEST_SCORE_FONT.render(str(self.HIGH_SCORE), False, self.COLORS['best_score_color'])
+        BEST_SCORE_IMG = BEST_SCORE_FONT.render(str(self.BEST_SCORE), False, self.COLORS['best_score_color'])
         pygame.draw.rect(self.SCREEN, self.COLORS['screen_color'], SCORE_SURFACE)
         self.SCREEN.blit(BEST_TITLE_IMG, (self.BOARD_ORIGIN_X, self.BOARD_ORIGIN_Y - 120))
         self.SCREEN.blit(BEST_SCORE_IMG, (self.BOARD_ORIGIN_X + 50, self.BOARD_ORIGIN_Y - 120))
@@ -656,20 +658,18 @@ class Game:
         pygame.draw.rect(self.SCREEN, self.COLORS['red_shape_border'], RED_BOOST_TIMER_BORDER, 1)
         pygame.draw.rect(self.SCREEN, self.COLORS['green_shape_border'], GREEN_BOOST_TIMER_BORDER, 1)
         pygame.draw.rect(self.SCREEN, self.COLORS['blue_shape_border'], BLUE_BOOST_TIMER_BORDER, 1)
-        pygame.display.update(pygame.Rect((RED_TIMER_ORIGIN_X, RED_TIMER_ORIGIN_Y, 100, 45)))
         
         if self.BOOST_IS_ACTIVE['RED']:
             RED_BOOST_TIMER_FILLER = pygame.Rect(self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 10 - 131 + 1, self.BOARD_ORIGIN_Y - 90 + 1 + FILLER_HEIGHT * (1 - self.BOOST_TIME_REMAINING['RED'] / 7), FILLER_WIDTH, FILLER_HEIGHT * (self.BOOST_TIME_REMAINING['RED'] / 7))
             pygame.draw.rect(self.SCREEN, self.COLORS['red_tile'], RED_BOOST_TIMER_FILLER)
-            pygame.display.update(RED_BOOST_TIMER_FILLER)
         if self.BOOST_IS_ACTIVE['GREEN']:
             GREEN_BOOST_TIMER_FILLER = pygame.Rect(self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 10 - 83 + 1, self.BOARD_ORIGIN_Y - 90 + 1 + FILLER_HEIGHT * (1 - self.BOOST_TIME_REMAINING['GREEN'] / 7), FILLER_WIDTH, FILLER_HEIGHT * (self.BOOST_TIME_REMAINING['GREEN'] / 7))
             pygame.draw.rect(self.SCREEN, self.COLORS['green_tile'], GREEN_BOOST_TIMER_FILLER)
-            pygame.display.update(GREEN_BOOST_TIMER_FILLER)            
         if self.BOOST_IS_ACTIVE['BLUE']:
             BLUE_BOOST_TIMER_FILLER = pygame.Rect(self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 10 - 35 + 1, self.BOARD_ORIGIN_Y - 90 + 1 + FILLER_HEIGHT * (1 - self.BOOST_TIME_REMAINING['BLUE'] / 7), FILLER_WIDTH, FILLER_HEIGHT * (self.BOOST_TIME_REMAINING['BLUE'] / 7))
             pygame.draw.rect(self.SCREEN, self.COLORS['blue_tile'], BLUE_BOOST_TIMER_FILLER)
-            pygame.display.update(BLUE_BOOST_TIMER_FILLER)            
+        
+        pygame.display.update(pygame.Rect((RED_TIMER_ORIGIN_X, RED_TIMER_ORIGIN_Y, 100, 45)))
 
     def evaluate_additional_running_time(self):
         ADDITIONAL_RUNNING_TIME = int(time.time() - self.GAME_START_TIME - 60)
@@ -723,11 +723,9 @@ class Game:
         self.SCREEN.blit(TIME_PLAYED_TITLE_IMG, (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 - 87, self.BOARD_ORIGIN_Y + 265))
         self.SCREEN.blit(TIME_PLAYED_VALUE_IMG, (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 47, self.BOARD_ORIGIN_Y + 265))
         pygame.draw.line(self.SCREEN, self.COLORS['color_white'], (self.BOARD_ORIGIN_X + 80, self.BOARD_ORIGIN_Y + 335), (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION - 80, self.BOARD_ORIGIN_Y + 335), 2)
-        # pygame.draw.rect(self.SCREEN, self.COLORS['active_tile_halo'], pygame.Rect(226, 532, 251, 48))
         self.SCREEN.blit(PLAY_AGAIN_TITLE_IMG, (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 - 115, self.BOARD_ORIGIN_Y + 350))
         pygame.draw.polygon(self.SCREEN, self.COLORS['green_tile'], PLAY_AGAIN_BUTTON_POINTS[0:3])
         pygame.draw.polygon(self.SCREEN, self.COLORS['green_shape_border'], PLAY_AGAIN_BUTTON_POINTS[3:])
-        # pygame.draw.rect(self.SCREEN, self.COLORS['active_tile_halo'], pygame.Rect(298, 594, 109, 45))
         self.SCREEN.blit(EXIT_TITLE_IMG, (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 - 42, self.BOARD_ORIGIN_Y + 414))
         pygame.draw.polygon(self.SCREEN, self.COLORS['red_tile'], EXIT_BUTTON_POINTS[0:3])
         pygame.draw.polygon(self.SCREEN, self.COLORS['red_shape_border'], EXIT_BUTTON_POINTS[3:])
@@ -740,8 +738,6 @@ class Game:
         self.GAME_ADDITIONAL_RUNNING_TIME = ""
         self.GAME_START_TIME = self.GAME_CURRENT_TIME_STAMP = time.time()
         self.GAME_PREVIOUS_TIME_STAMP = 0
-        self.EXIT_FLAG = False
-        self.IS_GAME_BEGINNING = True
         self.IS_GAME_OVER = False
         self.ACTIVE_TILE_1 = None
         self.ACTIVE_TILE_2 = None
@@ -751,19 +747,95 @@ class Game:
         self.COMBO_TIME_START = 0.0
         self.COMBO_TIME_END = 0.0
         self.COMBO_COUNT = 1
+        self.BOOST_IS_ACTIVE = {'RED': False, 'GREEN': False, 'BLUE': False}
+        self.BOOST_START_TIME = {'RED': 0, 'GREEN': 0, 'BLUE': 0}
+        self.BOOST_TIME_REMAINING = {'RED': 7, 'GREEN': 7, 'BLUE': 7}
+        self.BOOST_RUNNING_TIME = {'RED': 0, 'GREEN': 0, 'BLUE': 0}
 
-    def update_high_score(self):
-        if self.SCORE > self.HIGH_SCORE:
-            self.HIGH_SCORE = self.SCORE
+    def update_best_score(self):
+        if self.IS_AT_HOMEPAGE:
+            read_file = open('User_Best_Score.txt','r')
+            for line in read_file:
+                if 'Best_Score: ' in line:
+                    self.SAVED_BEST_SCORE = int(line.replace('Best_Score: ',''))
+            if self.SAVED_BEST_SCORE > self.BEST_SCORE:
+                self.BEST_SCORE = self.SAVED_BEST_SCORE
+        elif self.IS_CLOSING_GAME:
+            if self.BEST_SCORE > self.SAVED_BEST_SCORE:
+                write_file = open('User_Best_Score.txt', 'w')
+                write_file.write('Best_Score: ' + str(self.BEST_SCORE))
+                write_file.close()
+        elif self.SCORE > self.BEST_SCORE:
+            self.BEST_SCORE = self.SCORE
 
-    def display_pause_option(self):
-        PAUSE_BUTTON_BORDER = pygame.Rect(570,30,40,40)
-        PAUSE_BUTTON_I = pygame.Rect(580,38,7,24)
-        PAUSE_BUTTON_II = pygame.Rect(593,38,7,24)
-        pygame.draw.rect(self.SCREEN, self.COLORS['darker_semi_grey'], PAUSE_BUTTON_BORDER, 1, 7)
-        pygame.draw.rect(self.SCREEN, self.COLORS['semi_grey'], PAUSE_BUTTON_I, border_radius = 5)
-        pygame.draw.rect(self.SCREEN, self.COLORS['semi_grey'], PAUSE_BUTTON_II, border_radius = 5)
-        pygame.display.update(PAUSE_BUTTON_BORDER)
-        pygame.display.update(PAUSE_BUTTON_I)
-        pygame.display.update(PAUSE_BUTTON_II)
+    def display_home_screen(self):
+        self.SCREEN.fill(self.COLORS['screen_color'])
+        BIG_BORDER_FONT = pygame.font.Font("BebasNeue-Regular.otf", 250)
+        SMALL_BORDER_FONT = pygame.font.Font("BebasNeue-Regular.otf", 200)
+        BIG_TITLE_FONT = pygame.font.Font("BebasNeue-Regular.otf", 230)
+        SMALL_TITLE_FONT = pygame.font.Font("BebasNeue-Regular.otf", 180)
+        DESCRIPTION_FONT = pygame.font.Font("BebasNeue-Regular.otf", 20)
+        DECISION_FONT = pygame.font.Font("BebasNeue-Regular.otf", 67)
+        SUBDECISION_FONT = pygame.font.Font("BebasNeue-Regular.otf", 62)
+        PLAY_GAME_BUTTON_POINTS = ((self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 115, self.BOARD_ORIGIN_Y + 342), 
+                                    (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 115, self.BOARD_ORIGIN_Y + 361), 
+                                    (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 135, self.BOARD_ORIGIN_Y + 361), 
+                                    (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 115, self.BOARD_ORIGIN_Y + 361), 
+                                    (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 135, self.BOARD_ORIGIN_Y + 361), 
+                                    (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 115, self.BOARD_ORIGIN_Y + 380)
+                                    )
+        EXIT_BUTTON_POINTS = ((self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 47, self.BOARD_ORIGIN_Y + 410), 
+                              (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 47, self.BOARD_ORIGIN_Y + 428), 
+                              (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 67, self.BOARD_ORIGIN_Y + 428), 
+                              (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 47, self.BOARD_ORIGIN_Y + 428), 
+                              (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 67, self.BOARD_ORIGIN_Y + 428), 
+                              (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 + 47, self.BOARD_ORIGIN_Y + 446)
+                              )
+
+        TWO_BORDER_IMG = BIG_BORDER_FONT.render('2', False, self.COLORS['semi_black'])
+        F_BORDER_IMG = SMALL_BORDER_FONT.render('F', False, self.COLORS['semi_black'])
+        U_BORDER_IMG = SMALL_BORDER_FONT.render('U', False, self.COLORS['semi_black'])
+        S_BORDER_IMG = SMALL_BORDER_FONT.render('S', False, self.COLORS['semi_black'])
+        E_BORDER_IMG = SMALL_BORDER_FONT.render('E', False, self.COLORS['semi_black'])
+        TWO_TEXT_IMG = BIG_TITLE_FONT.render('2', False, self.COLORS['color_white'])
+        F_TEXT_IMG = SMALL_TITLE_FONT.render('F', False, self.COLORS['shape_star_color'])
+        U_TEXT_IMG = SMALL_TITLE_FONT.render('U', False, self.COLORS['red_tile'])
+        S_TEXT_IMG = SMALL_TITLE_FONT.render('S', False, self.COLORS['blue_tile'])
+        E_TEXT_IMG = SMALL_TITLE_FONT.render('E', False, self.COLORS['green_tile'])
+        DESCRIPTION_TEXT_IMG_I = DESCRIPTION_FONT.render('*Disclaimer: This only a copy of the original game', False, self.COLORS['best_score_color'])
+        DESCRIPTION_TEXT_IMG_II = DESCRIPTION_FONT.render('developed by Mojo Forest. Enjoy! =]', False, self.COLORS['best_score_color'])
+        PLAY_GAME_TITLE_IMG = DECISION_FONT.render('PLAY GAME', False, self.COLORS['color_white'])
+        EXIT_TITLE_IMG = SUBDECISION_FONT.render('EXIT', False, self.COLORS['color_white'])
+
+        self.SCREEN.blit(TWO_BORDER_IMG, (169,115))
+        self.SCREEN.blit(F_BORDER_IMG, (252,160))
+        self.SCREEN.blit(U_BORDER_IMG, (311,160))
+        self.SCREEN.blit(S_BORDER_IMG, (379,160))
+        self.SCREEN.blit(E_BORDER_IMG, (441,160))
+        self.SCREEN.blit(TWO_TEXT_IMG, (168,125))
+        self.SCREEN.blit(F_TEXT_IMG, (250,170))
+        self.SCREEN.blit(U_TEXT_IMG, (312,170))
+        self.SCREEN.blit(S_TEXT_IMG, (379,170))
+        self.SCREEN.blit(E_TEXT_IMG, (442,170))
+        self.SCREEN.blit(DESCRIPTION_TEXT_IMG_I, (171,390))
+        self.SCREEN.blit(DESCRIPTION_TEXT_IMG_II, (259,410))
+        self.SCREEN.blit(PLAY_GAME_TITLE_IMG, (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 - 116, self.BOARD_ORIGIN_Y + 323))
+        pygame.draw.polygon(self.SCREEN, self.COLORS['green_tile'], PLAY_GAME_BUTTON_POINTS[0:3])
+        pygame.draw.polygon(self.SCREEN, self.COLORS['green_shape_border'], PLAY_GAME_BUTTON_POINTS[3:])
+        self.SCREEN.blit(EXIT_TITLE_IMG, (self.BOARD_ORIGIN_X + self.BOARD_DIMENSION/2 - 43, self.BOARD_ORIGIN_Y + 394))
+        pygame.draw.polygon(self.SCREEN, self.COLORS['red_tile'], EXIT_BUTTON_POINTS[0:3])
+        pygame.draw.polygon(self.SCREEN, self.COLORS['red_shape_border'], EXIT_BUTTON_POINTS[3:])
+
+    # def display_pause_option(self):
+    #     pygame.draw.rect(self.SCREEN, self.COLORS['blue_tile'], pygame.Rect(570,30,40,40))
+    #     PAUSE_BUTTON_BORDER = pygame.Rect(570,30,40,40)
+    #     PAUSE_BUTTON_I = pygame.Rect(580,38,7,24)
+    #     PAUSE_BUTTON_II = pygame.Rect(593,38,7,24)
+    #     pygame.draw.rect(self.SCREEN, self.COLORS['darker_semi_grey'], PAUSE_BUTTON_BORDER, 1, 7)
+    #     pygame.draw.rect(self.SCREEN, self.COLORS['semi_grey'], PAUSE_BUTTON_I, border_radius = 5)
+    #     pygame.draw.rect(self.SCREEN, self.COLORS['semi_grey'], PAUSE_BUTTON_II, border_radius = 5)
+    #     pygame.display.update(pygame.Rect(570,30,40,40))
+    #     pygame.display.update(PAUSE_BUTTON_BORDER)
+    #     pygame.display.update(PAUSE_BUTTON_I)
+    #     pygame.display.update(PAUSE_BUTTON_II)
         
