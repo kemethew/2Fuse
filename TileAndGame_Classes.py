@@ -802,7 +802,7 @@ class Game:
         U_TEXT_IMG = SMALL_TITLE_FONT.render('U', False, self.COLORS['red_tile'])
         S_TEXT_IMG = SMALL_TITLE_FONT.render('S', False, self.COLORS['blue_tile'])
         E_TEXT_IMG = SMALL_TITLE_FONT.render('E', False, self.COLORS['green_tile'])
-        DESCRIPTION_TEXT_IMG_I = DESCRIPTION_FONT.render('*Disclaimer: This only a copy of the original game', False, self.COLORS['best_score_color'])
+        DESCRIPTION_TEXT_IMG_I = DESCRIPTION_FONT.render('*Disclaimer: This is only a copy of the original game', False, self.COLORS['best_score_color'])
         DESCRIPTION_TEXT_IMG_II = DESCRIPTION_FONT.render('developed by Mojo Forest. Enjoy! =]', False, self.COLORS['best_score_color'])
         PLAY_GAME_TITLE_IMG = DECISION_FONT.render('PLAY GAME', False, self.COLORS['color_white'])
         EXIT_TITLE_IMG = SUBDECISION_FONT.render('EXIT', False, self.COLORS['color_white'])
