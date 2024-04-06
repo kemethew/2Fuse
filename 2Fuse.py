@@ -1,6 +1,7 @@
-import pygame, sys, time, threading
+import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+import pygame, sys, time
 from TileAndGame_Classes import Game
-
 
 if __name__ == '__main__':
     pygame.init()
